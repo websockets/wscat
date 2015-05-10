@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/einaros/ws/tree/master/wscat"
+    "url": "https://github.com/websockets/wscat"
   },
   "keywords": [
     "wscat",
