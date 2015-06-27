@@ -117,7 +117,7 @@ program
 
 if (program.listen && program.connect) {
   console.error('\033[33merror: use either --listen or --connect\033[39m');
-  process.exit(-1);
+  process.exit(1);
 } else if (program.listen) {
   var wsConsole = new Console();
   wsConsole.pause();
@@ -169,7 +169,7 @@ if (program.listen && program.connect) {
     });
   }).on('error', function servererrror(error) {
     wsConsole.print('error: ' + error.toString(), Console.Colors.Yellow);
-    process.exit(-1);
+    process.exit(1);
   });
 } else if (program.connect) {
   var wsConsole = new Console();
@@ -209,7 +209,7 @@ if (program.listen && program.connect) {
     process.exit();
   }).on('error', function error(code, description) {
     wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
-    process.exit(-1);
+    process.exit(1);
   }).on('message', function message(data, flags) {
     wsConsole.print('< ' + data, Console.Colors.Blue);
   });
