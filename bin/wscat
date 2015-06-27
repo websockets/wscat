@@ -189,8 +189,13 @@ if (program.listen && program.connect) {
     headers.Authorization = 'Basic '+ new Buffer(program.auth).toString('base64');
   }
 
+  var connectUrl = program.connect;
+  if (!connectUrl.match(/\w+:\/\/.*$/i)) {
+    connectUrl = 'ws://' + connectUrl;
+  }
+
   options.headers = headers;
-  var ws = new WebSocket(program.connect, options);
+  var ws = new WebSocket(connectUrl, options);
 
   ws.on('open', function open() {
     wsConsole.print('connected (press CTRL+C to quit)', Console.Colors.Green);
