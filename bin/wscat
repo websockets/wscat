@@ -103,7 +103,7 @@ var version = require('../package.json').version;
 
 program
   .version(version)
-  .usage('[options] <url>')
+  .usage('[options] (--listen <port> | --connect <url>)')
   .option('-l, --listen <port>', 'listen on port')
   .option('-c, --connect <url>', 'connect to a websocket server')
   .option('-p, --protocol <version>', 'optional protocol version')
