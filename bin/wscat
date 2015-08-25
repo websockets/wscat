@@ -96,6 +96,36 @@ function splitOnce(sep, str) { // sep can be either String or RegExp
   return [tokens[0], str.replace(sep, '').substr(tokens[0].length)];
 }
 
+function fromHex(data) {
+  var bytes = data.split(' ');
+  data = '';
+  for (var i = 0; i < bytes.length; i++) {
+    data += String.fromCharCode(Number.parseInt(bytes[i], 16));
+  }
+  return data;
+}
+
+function toHex(data) {
+  if (data instanceof Buffer) {
+    o = '';
+    for (var i=0; i<data.length; i++) {
+      o += data.readUIntBE(i, 1).toString(16) + ' ';
+    }
+  } else if (data instanceof ArrayBuffer) {
+    var view = new Uint8Array(data);
+    var o = '';
+    for (var i=0; i<data.byteLength; i++) {
+      o += view[i].toString(16) + ' ';
+    }
+  } else if (typeof(data) === 'string') {
+    var o = '';
+    data.split('').forEach(function(c) {
+      o += c.charCodeAt(0).toString(16) + ' ';
+    });
+  }
+  return o;
+}
+
 /**
  * The actual application
  */
@@ -113,6 +143,8 @@ program
   .option('-n, --no-check', 'Do not check for unauthorized certificates')
   .option('-H, --header <header:value>', 'Set an HTTP header. Repeat to set multiple. (--connect only)', appender(), [])
   .option('--auth <username:password>', 'Add basic HTTP authentication header. (--connect only)')
+  .option('--hex-in', 'Read input lines as hexadecimal (separate bytes with spaces)')
+  .option('--hex-out', 'Output as hexadecimal')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -144,6 +176,7 @@ if (program.listen && program.connect) {
 
   wsConsole.on('line', function line(data) {
     if (ws) {
+      if (program.hexIn) data = fromHex(data);
       ws.send(data, { mask: false });
       wsConsole.prompt();
     }
@@ -165,6 +198,7 @@ if (program.listen && program.connect) {
     }).on('error', function error(code, description) {
       wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
     }).on('message', function message(data, flags) {
+      if (program.hexOut) data = toHex(data);
       wsConsole.print('< ' + data, Console.Colors.Blue);
     });
   }).on('error', function servererrror(error) {
@@ -200,6 +234,7 @@ if (program.listen && program.connect) {
   ws.on('open', function open() {
     wsConsole.print('connected (press CTRL+C to quit)', Console.Colors.Green);
     wsConsole.on('line', function line(data) {
+      if (program.hexIn) data = fromHex(data);
       ws.send(data, { mask: true });
       wsConsole.prompt();
     });
@@ -211,6 +246,7 @@ if (program.listen && program.connect) {
     wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
     process.exit(-1);
   }).on('message', function message(data, flags) {
+    if (program.hexOut) data = toHex(data);
     wsConsole.print('< ' + data, Console.Colors.Blue);
   });
 
@@ -218,7 +254,7 @@ if (program.listen && program.connect) {
     if (!ws) return;
 
     try { ws.close(); }
-    catch(e) {} 
+    catch(e) {}
 
     process.exit();
   });
