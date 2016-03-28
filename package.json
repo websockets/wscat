@@ -18,9 +18,9 @@
   "author": "Arnout Kazemier, Einar Otto Stangvik",
   "license": "MIT",
   "dependencies": {
-    "commander": "2.8.x",
+    "commander": "2.9.x",
     "tinycolor": "0.0.x",
-    "ws": "0.8.x"
+    "ws": "1.0.x"
   },
   "bin": {
     "wscat": "./bin/wscat"
