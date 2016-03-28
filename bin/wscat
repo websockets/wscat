@@ -110,6 +110,7 @@ program
   .usage('[options] (--listen <port> | --connect <url>)')
   .option('-l, --listen <port>', 'listen on port')
   .option('-c, --connect <url>', 'connect to a websocket server')
+  .option('-m, --message <message>', 'initial message to send', appender(), [])
   .option('-p, --protocol <version>', 'optional protocol version')
   .option('-o, --origin <origin>', 'optional origin')
   .option('--host <host>', 'optional host')
@@ -229,6 +230,10 @@ if (program.listen && program.connect) {
     ws = new WebSocket(connectUrl, options);
     ws.on('open', function open() {
       wsConsole.print('connected (press CTRL+C to quit)', Console.Colors.Green);
+      (program.message || []).forEach(function(msg) {
+        ws.send(msg);
+        wsConsole.print('> ' + msg);
+      });
       wsConsole.setPrompt('> ');
       wsConsole.prompt();
       isOpen = true;
