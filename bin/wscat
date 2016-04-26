@@ -17,6 +17,85 @@ var program = require('commander')
   , util = require('util')
   , fs = require('fs');
 
+/*****************************
+ * Parse Command Section
+ */
+var interval = null;
+var messagesSent = 0;
+var messagesReceived = 0;
+var pingsSent = 0;
+var pingsReceived = 0;
+var pongsSent = 0;
+var pongsReceived = 0;
+var lastMessage = null;
+var connectionStartTime;
+var connectionEndTime;
+function printCounts() {
+  var currentTime = new Date()
+  wsConsole.print('Connection Open for ' + (currentTime - connectionStartTime) + ' ms', Console.Colors.Green);
+  wsConsole.print(messagesReceived + ' message(s) Received', Console.Colors.Green);
+  wsConsole.print(messagesSent + ' message(s) Sent', Console.Colors.Green);
+  wsConsole.print(pingsReceived + ' ping(s) Received', Console.Colors.Green);
+  wsConsole.print(pingsSent + ' ping(s) Sent', Console.Colors.Green);
+  wsConsole.print(pongsReceived + ' pong(s) Received', Console.Colors.Green);
+  wsConsole.print(pongsSent + ' pong(s) Sent', Console.Colors.Green);
+  if (lastMessage) {
+    wsConsole.print('Last Message Received = ', Console.Colors.Green);
+    wsConsole.print(lastMessage, Console.Colors.Default);
+  }
+}
+function printCommands(){
+  wsConsole.print('\'> send <message>\' to send <message> to server', Console.Colors.Green);
+  wsConsole.print('\'> ping\' to send a ping to the server', Console.Colors.Green);
+  wsConsole.print('\'> pong\' to send pong to the server', Console.Colors.Green);
+  wsConsole.print('\'> close\' to gracefully close connection to the server', Console.Colors.Green);
+  wsConsole.print('\'> last\' to reprint last received message', Console.Colors.Green);
+  wsConsole.print('\'> counts\' to print frame counts', Console.Colors.Green);
+}
+function parseInput(data){
+  if (program.parsecommands) {
+    if (data.substring(0, 'send '.length) === 'send ') {
+      ws.send(data.substring('send '.length, data.length), {
+        mask: true
+      });
+      wsConsole.print('sent (' + data.substring('send '.length, data.length) + ')', Console.Colors.Green);
+      messagesSent++;
+    }
+    if (data.substring(0, 'ping'.length) === 'ping') {
+      ws.ping();
+      pingsSent++;
+      wsConsole.print('ping sent', Console.Colors.Green);
+    }
+    if (data.substring(0, 'pong'.length) === 'pong') {
+      ws.pong();
+      pongsSent++;
+      wsConsole.print('pong sent', Console.Colors.Green);
+    }
+    if (data.substring(0, 'close'.length) === 'close') {
+      ws.close(1001, 'Client Closing.');
+      wsConsole.print('Connection Closed', Console.Colors.Green);
+      printCounts();
+      console.timeEnd('ConnectionLasted');
+      process.exit();
+    }
+    if (data.substring(0, 'last'.length) === 'last') {
+      if (lastMessage) {
+        wsConsole.print('Last Message Recieved = ', Console.Colors.Green);
+        wsConsole.print(lastMessage, Console.Colors.Default);
+      }
+    }
+    if (data.substring(0, 'counts'.length) === 'counts') {
+      printCounts();
+    }
+  } else {
+    ws.send(data, {
+      mask: true
+    });
+    messagesSent++;
+  }
+  wsConsole.prompt();
+}
+
 /**
  * InputReader - processes console input.
  */
@@ -119,6 +198,8 @@ program
   .option('-H, --header <header:value>', 'Set an HTTP header. Repeat to set multiple. (--connect only)', appender(), [])
   .option('--auth <username:password>', 'Add basic HTTP authentication header. (--connect only)')
   .option('-r, --retry', 'Retry on disconnection. (--connect only)')
+  .option('-k, --keepalive <interval>', 'send a ping every interval seconds')
+  .option('-P, --parsecommands', 'parse input for commands (send, ping, pong, close, etc.)')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -138,6 +219,9 @@ if (program.listen && program.connect) {
   var ws = null;
   var wss = new WebSocket.Server({ port: program.listen }, function listening() {
     wsConsole.print('listening on port ' + program.listen + ' (press CTRL+C to quit)', Console.Colors.Green);
+    if (program.parsecommands) {
+      printCommands();
+    }
     wsConsole.clear();
   });
 
@@ -147,13 +231,8 @@ if (program.listen && program.connect) {
 
     process.exit(0);
   });
-
-  wsConsole.on('line', function line(data) {
-    if (ws) {
-      ws.send(data, { mask: false });
-      wsConsole.prompt();
-    }
-  });
+  wsConsole.on('line', parseInput);
+  
 
   wss.on('connection', function(newClient) {
     if (ws) return newClient.terminate();
@@ -162,16 +241,42 @@ if (program.listen && program.connect) {
     wsConsole.resume();
     wsConsole.prompt();
     wsConsole.print('client connected', Console.Colors.Green);
-
+    console.time('ConnectionLasted');
+    connectionStartTime = new Date();
+    if (program.keepalive) {
+      interval = setInterval(function() {
+        ws.ping();
+        pingsSent++;
+        wsConsole.print('ping sent', Console.Colors.Green);
+      }, program.keepalive);
+    }
     ws.on('close', function close() {
       wsConsole.print('disconnected', Console.Colors.Green);
+      printCounts();
+      console.timeEnd('ConnectionLasted');
+
+      if (interval != null) {
+        clearInterval(interval);
+      }
       wsConsole.clear();
       wsConsole.pause();
       ws = null;
     }).on('error', function error(code, description) {
+      printCounts();
       wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
     }).on('message', function message(data, flags) {
+            lastMessage = data;
+
       wsConsole.print('< ' + data, Console.Colors.Blue);
+      messagesReceived++;
+    }).on('pong', function(data, flags) {
+      pongsReceived++;
+      wsConsole.print('pong Received', Console.Colors.Green);
+    }).on('ping', function(data, flags) {
+      pingsReceived++;
+      pongsSent++;
+      ws.pong();
+      wsConsole.print('pong sent', Console.Colors.Green);
     });
   }).on('error', function servererrror(error) {
     wsConsole.print('error: ' + error.toString(), Console.Colors.Yellow);
@@ -229,10 +334,20 @@ if (program.listen && program.connect) {
 
     ws = new WebSocket(connectUrl, options);
     ws.on('open', function open() {
+      console.time('ConnectionLasted');
+    connectionStartTime = new Date();
+    if (program.keepalive) {
+      interval = setInterval(function() {
+        ws.ping();
+        pingsSent++;
+        wsConsole.print('ping sent', Console.Colors.Green);
+      }, program.keepalive);
+    }
       wsConsole.print('connected (press CTRL+C to quit)', Console.Colors.Green);
       (program.message || []).forEach(function(msg) {
         ws.send(msg);
         wsConsole.print('> ' + msg);
+        messagesSent++;
       });
       wsConsole.setPrompt('> ');
       wsConsole.prompt();
@@ -249,29 +364,43 @@ if (program.listen && program.connect) {
         process.exit();
       }
     }).on('error', function error(code, description) {
+      
       if (numRetries == 0) {
+        printCounts();
         wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
       }
       ws = null;
       if (program.retry) {
         retry();
       } else {
+        printCounts();
         process.exit(1);
       }
     }).on('message', function message(data, flags) {
+      messagesReceived++;
+    lastMessage = data;
       wsConsole.print('< ' + data, Console.Colors.Blue);
-    });
+    }).on('pong', function pong(data, flags) {
+    pongsReceived++;
+    wsConsole.print('pong Received', Console.Colors.Green);
+  }).on('ping', function ping(data, flags) {
+    pingsReceived++;
+    pongsSent++;
+    ws.pong();
+    wsConsole.print('pong sent', Console.Colors.Green);
+  });
   }
   connect();
 
   wsConsole.on('line', function line(data) {
     if (!isOpen && numRetries > maxRetries) { numRetries = 0; connect(); }
     if (!isOpen) return;
-    ws.send(data, { mask: true });
-    wsConsole.prompt();
+    parseInput(data);
   });
 
   wsConsole.on('close', function close() {
+    printCounts();
+
     if (!ws) return;
 
     try { ws.close(); }
