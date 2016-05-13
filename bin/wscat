@@ -248,7 +248,7 @@ if (program.listen && program.connect) {
         ws.ping();
         pingsSent++;
         wsConsole.print('ping sent', Console.Colors.Green);
-      }, program.keepalive);
+      }, program.keepalive * 1000);
     }
     ws.on('close', function close() {
       wsConsole.print('disconnected', Console.Colors.Green);
@@ -341,7 +341,7 @@ if (program.listen && program.connect) {
         ws.ping();
         pingsSent++;
         wsConsole.print('ping sent', Console.Colors.Green);
-      }, program.keepalive);
+      }, program.keepalive * 1000);
     }
       wsConsole.print('connected (press CTRL+C to quit)', Console.Colors.Green);
       (program.message || []).forEach(function(msg) {
