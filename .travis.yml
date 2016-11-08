@@ -1,3 +1,4 @@
+sudo: false
 language: node_js
-nvm:
-  - "0.10"
+node_js:
+  - "6"
