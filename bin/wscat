@@ -51,8 +51,12 @@ Console.Colors = {
   Default: '\033[39m'
 };
 
-Console.prototype.prompt = function prompt() {
-  this.readlineInterface.prompt();
+Console.prototype.prompt = function prompt(preserveCursor) {
+  this.readlineInterface.prompt(preserveCursor);
+};
+
+Console.prototype.setPrompt = function setPrompt(prompt) {
+  this.readlineInterface.setPrompt(prompt);
 };
 
 Console.prototype.print = function print(msg, color) {
@@ -113,11 +117,12 @@ program
   .option('-n, --no-check', 'Do not check for unauthorized certificates')
   .option('-H, --header <header:value>', 'Set an HTTP header. Repeat to set multiple. (--connect only)', appender(), [])
   .option('--auth <username:password>', 'Add basic HTTP authentication header. (--connect only)')
+  .option('-r, --retry', 'Retry on disconnection. (--connect only)')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
   console.error('\033[33merror: use either --listen or --connect\033[39m');
-  process.exit(-1);
+  process.exit(1);
 } else if (program.listen) {
   var wsConsole = new Console();
   wsConsole.pause();
@@ -169,11 +174,13 @@ if (program.listen && program.connect) {
     });
   }).on('error', function servererrror(error) {
     wsConsole.print('error: ' + error.toString(), Console.Colors.Yellow);
-    process.exit(-1);
+    process.exit(1);
   });
 } else if (program.connect) {
-  var wsConsole = new Console();
+  var ws;
+  var isOpen = false;
   var options = {};
+  var wsConsole = new Console();
 
   if (program.protocol) options.protocolVersion = +program.protocol;
   if (program.origin) options.origin = program.origin;
@@ -195,23 +202,68 @@ if (program.listen && program.connect) {
   }
 
   options.headers = headers;
-  var ws = new WebSocket(connectUrl, options);
 
-  ws.on('open', function open() {
-    wsConsole.print('connected (press CTRL+C to quit)', Console.Colors.Green);
-    wsConsole.on('line', function line(data) {
-      ws.send(data, { mask: true });
+  var retryTimer;
+  var numRetries = 0, maxRetries = 4;
+  function retry() {
+    if (retryTimer) return;
+    if (++numRetries > maxRetries) {
+      wsConsole.setPrompt('disconnected, press any key to retry');
       wsConsole.prompt();
+    } else {
+      retryTimer = setTimeout(function() {
+        retryTimer = null;
+        connect();
+      }, 500);
+    }
+  }
+
+  function connect() {
+    if (ws) return;
+
+    if (program.retry) {
+      wsConsole.setPrompt('connecting... ');
+      wsConsole.prompt();
+    }
+
+    ws = new WebSocket(connectUrl, options);
+    ws.on('open', function open() {
+      wsConsole.print('connected (press CTRL+C to quit)', Console.Colors.Green);
+      wsConsole.setPrompt('> ');
+      wsConsole.prompt();
+      isOpen = true;
+      numRetries = 0;
+    }).on('close', function close() {
+      isOpen = false;
+      wsConsole.print('disconnected ', Console.Colors.Green);
+      wsConsole.clear();
+      ws = null;
+      if (program.retry) {
+        retry();
+      } else {
+        process.exit();
+      }
+    }).on('error', function error(code, description) {
+      if (numRetries == 0) {
+        wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
+      }
+      ws = null;
+      if (program.retry) {
+        retry();
+      } else {
+        process.exit(1);
+      }
+    }).on('message', function message(data, flags) {
+      wsConsole.print('< ' + data, Console.Colors.Blue);
     });
-  }).on('close', function close() {
-    wsConsole.print('disconnected', Console.Colors.Green);
-    wsConsole.clear();
-    process.exit();
-  }).on('error', function error(code, description) {
-    wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
-    process.exit(-1);
-  }).on('message', function message(data, flags) {
-    wsConsole.print('< ' + data, Console.Colors.Blue);
+  }
+  connect();
+
+  wsConsole.on('line', function line(data) {
+    if (!isOpen && numRetries > maxRetries) { numRetries = 0; connect(); }
+    if (!isOpen) return;
+    ws.send(data, { mask: true });
+    wsConsole.prompt();
   });
 
   wsConsole.on('close', function close() {
