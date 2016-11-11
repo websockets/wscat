@@ -19,6 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "commander": "2.8.x",
+    "read": "1.0.7",
     "tinycolor": "0.0.x",
     "ws": "0.8.x"
   },
