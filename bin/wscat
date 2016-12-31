@@ -181,7 +181,7 @@ if (program.listen && program.connect) {
   var cont = function () {
     var wsConsole = new Console();
 
-    if (program.protocol) options.protocolVersion = program.protocol;
+    if (program.protocol) options.protocolVersion = +program.protocol;
     if (program.origin) options.origin = program.origin;
     if (program.subprotocol) options.protocol = program.subprotocol;
     if (program.host) options.host = program.host;
@@ -227,7 +227,7 @@ if (program.listen && program.connect) {
       if (!ws) return;
 
       try { ws.close(); }
-      catch(e) {} 
+      catch (e) {}
 
       process.exit();
     });
