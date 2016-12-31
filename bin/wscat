@@ -127,13 +127,6 @@ if (program.listen && program.connect) {
   var wsConsole = new Console();
   wsConsole.pause();
 
-  var options = {};
-
-  if (program.protocol) options.protocolVersion = program.protocol;
-  if (program.origin) options.origin = program.origin;
-  if (program.subprotocol) options.protocol = program.subprotocol;
-  if (!program.check) options.rejectUnauthorized = program.check;
-
   var ws = null;
   var wss = new WebSocket.Server({ port: program.listen }, function listening() {
     wsConsole.print('listening on port ' + program.listen + ' (press CTRL+C to quit)', Console.Colors.Green);
