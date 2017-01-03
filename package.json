@@ -1,21 +1,21 @@
 {
-  "name": "wscat",
+  "name": "wscatverbose",
   "version": "1.1.1",
-  "description": "WebSocket cat",
+  "description": "WebSocket cat verbose version",
   "main": "index.js",
   "scripts": {
     "test": "echo \"No test specified\""
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/websockets/wscat"
+    "url": "https://github.com/truhlikfredy/wscat"
   },
   "keywords": [
-    "wscat",
+    "wscatverbose",
     "websocket",
     "cat"
   ],
-  "author": "Arnout Kazemier, Einar Otto Stangvik",
+  "author": "Arnout Kazemier, Einar Otto Stangvik, verbose by Anton Krug",
   "license": "MIT",
   "dependencies": {
     "commander": "~2.9.0",
@@ -24,6 +24,6 @@
     "ws": "~1.1.1"
   },
   "bin": {
-    "wscat": "./bin/wscat"
+    "wscatverbose": "./bin/wscatverbose"
   }
 }

@@ -7,13 +7,13 @@ WebSocket cat.
 This module needs to be installed globally so use the `-g` flag when installing:
 
 ```
-npm install -g wscat
+npm install -g wscatverbose
 ```
 
 ## Usage
 
 ```
-$ wscat -c ws://echo.websocket.org 
+$ wscatverbose -c ws://echo.websocket.org 
 connected (press CTRL+C to quit)
 > hi there
 < hi there
