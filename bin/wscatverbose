@@ -164,6 +164,7 @@ if (program.listen && program.connect) {
       wsConsole.print('error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
     }).on('message', function message(data, flags) {
       wsConsole.print('< ' + data, Console.Colors.Blue);
+      console.log(util.inspect(flags, false, null));
     });
   }).on('error', function servererrror(error) {
     wsConsole.print('error: ' + error.toString(), Console.Colors.Yellow);
@@ -214,6 +215,7 @@ if (program.listen && program.connect) {
       process.exit(-1);
     }).on('message', function message(data, flags) {
       wsConsole.print('< ' + data, Console.Colors.Blue);
+      console.log(util.inspect(flags, false, null));
     });
 
     wsConsole.on('close', function close() {

@@ -1,6 +1,7 @@
-# wscat
+# wscatverbose
 
-WebSocket cat.
+WebSocket cat. This is the same as https://github.com/websockets/wscat but this version displays flags of the messages which contain the buffer as well, sometimes handy for debugging
+
 
 ## Installation
 
