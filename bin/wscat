@@ -205,8 +205,12 @@ if (program.listen && program.connect) {
         ws.send(data, { mask: true });
         wsConsole.prompt();
       });
-    }).on('close', function close() {
-      wsConsole.print('disconnected', Console.Colors.Green);
+    }).on('close', function close(code, description) {
+      var msg = 'disconnected';
+      if (code != 1000) {
+        msg += ' with error ' + code + (description ? ': ' + description : '');
+      }
+      wsConsole.print(msg, Console.Colors.Green);
       wsConsole.clear();
       process.exit();
     }).on('error', function error(code, description) {
