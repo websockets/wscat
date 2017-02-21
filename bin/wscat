@@ -77,7 +77,9 @@ Console.prototype.print = function print(type, msg, color) {
 };
 
 Console.prototype.clear = function clear() {
-  this.stdout.write('\033[2K\033[E');
+  if (tty.isatty(1)) {
+    this.stdout.write('\033[2K\033[E');
+  }
 };
 
 Console.prototype.pause = function pausing() {
