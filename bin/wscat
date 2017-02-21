@@ -49,7 +49,7 @@ Console.Colors = {
   Red: '\033[31m',
   Green: '\033[32m',
   Yellow: '\033[33m',
-  Blue: '\033[34m',
+  Blue: '\033[37m',
   Default: '\033[39m'
 };
 
@@ -69,7 +69,7 @@ Console.prototype.print = function print(type, msg, color) {
     color = color || Console.Colors.Default;
     this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
     this.prompt();
-  } else if (type !== Console.Types.Control) {
+  } else if (type === Console.Types.Incoming) {
     this.stdout.write(msg + '\n');
   } else {
     // is a control message and we're not in a tty... drop it.
