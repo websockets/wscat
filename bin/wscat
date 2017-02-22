@@ -176,12 +176,12 @@ if (program.listen && program.connect) {
       wsConsole.pause();
       ws = null;
     }).on('error', function error(code, description) {
-      wsConsole.print(Console.Types.Error, 'error: ' + code + (description ? ' ' + description : ''), Console.Colors.Yellow);
+      wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
     }).on('message', function message(data, flags) {
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
   }).on('error', function servererrror(error) {
-    wsConsole.print(Console.Types.Error, error.toString(), Console.Colors.Yellow);
+    wsConsole.print(Console.Types.Error, error.message, Console.Colors.Yellow);
     process.exit(-1);
   });
 } else if (program.connect) {
