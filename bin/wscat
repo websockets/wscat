@@ -149,15 +149,13 @@ if (program.listen && program.connect) {
   });
 
   wsConsole.on('close', function close() {
-    try { ws.close(); }
-    catch (e) {}
-
+    if (ws) ws.close();
     process.exit(0);
   });
 
   wsConsole.on('line', function line(data) {
     if (ws) {
-      ws.send(data, { mask: false });
+      ws.send(data);
       wsConsole.prompt();
     }
   });
@@ -217,7 +215,7 @@ if (program.listen && program.connect) {
     ws.on('open', function open() {
       wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
       wsConsole.on('line', function line(data) {
-        ws.send(data, { mask: true });
+        ws.send(data);
         wsConsole.prompt();
       });
     }).on('close', function close() {
@@ -232,11 +230,7 @@ if (program.listen && program.connect) {
     });
 
     wsConsole.on('close', function close() {
-      if (!ws) return;
-
-      try { ws.close(); }
-      catch (e) {}
-
+      ws.close();
       process.exit();
     });
   };
