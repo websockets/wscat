@@ -21,7 +21,7 @@
     "commander": "~2.9.0",
     "read": "~1.0.7",
     "tinycolor": "~0.0.1",
-    "ws": "~2.1.0"
+    "ws": "~2.2.0"
   },
   "bin": {
     "wscat": "./bin/wscat"
