@@ -7,7 +7,7 @@ WebSocket cat.
 This module needs to be installed globally so use the `-g` flag when installing:
 
 ```
-npm install -g wscat
+npm install -g wscat2
 ```
 ## Help
 ```
