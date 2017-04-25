@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "lib": ["es2015"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "outDir": "lib",
+    "strictNullChecks": true,
+    "target": "es6"
+  },
+  "include": [
+    "src/*.ts"
+  ]
+}

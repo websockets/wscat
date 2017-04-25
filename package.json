@@ -1,0 +1,36 @@
+{
+  "name": "wscat2",
+  "version": "2.0.0",
+  "description": "Unix-style WebSocket cat",
+  "author": "Johan Nordberg",
+  "license": "MIT",
+  "index": "lib/wscat.js",
+  "bin": {
+    "wscat": "lib/cli.js"
+  },
+  "files": [
+    "lib/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnordberg/wscat"
+  },
+  "scripts": {
+    "prepublishOnly": "make test && make lib",
+    "test": "make test"
+  },
+  "keywords": [
+    "websocket",
+    "cat"
+  ],
+  "dependencies": {
+    "argparse": "^1.0.9",
+    "ws": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/argparse": "^1.0.30",
+    "@types/ws": "0.0.40",
+    "tslint": "^5.1.0",
+    "typescript": "^2.2.2"
+  }
+}
