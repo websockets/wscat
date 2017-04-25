@@ -1,5 +1,5 @@
 
-wscat2
+wscat2 [![Build Status](https://travis-ci.org/jnordberg/wscat.svg?branch=master)](https://travis-ci.org/jnordberg/wscat)
 ======
 
 Unix-style WebSocket cat (or netcat for websockets).
