@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "Unix-style WebSocket cat",
   "author": "Johan Nordberg",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "index": "lib/wscat.js",
   "bin": {
     "wscat": "lib/cli.js"
