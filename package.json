@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/argparse": "^1.0.30",
     "@types/ws": "0.0.40",
+    "ts-node": "^3.0.2",
     "tslint": "^5.1.0",
     "typescript": "^2.2.2"
   }

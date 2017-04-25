@@ -10,7 +10,7 @@ test_port=41328
 dd bs=32768 count=42 if=/dev/urandom of=${test_dir}/testfile1
 checksum1=$(sha256 ${test_dir}/testfile1)
 
-wscat=${test_dir}/../src/cli.ts
+wscat="${test_dir}/../node_modules/.bin/ts-node ${test_dir}/../src/cli.ts"
 
 $wscat --version || exit 1
 
