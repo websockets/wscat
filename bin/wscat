@@ -133,6 +133,7 @@ program
   .option('--cert <cert>', 'Specify a Client SSL Certificate (--connect only)')
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
+  .option('-k, --keep-open', 'Keep the socket open, even after receiving EOF. Useful in conjunction with echo')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -230,8 +231,10 @@ if (program.listen && program.connect) {
     });
 
     wsConsole.on('close', function close() {
-      ws.close();
-      process.exit();
+      if(!program['keepOpen']) {
+        ws.close();
+        process.exit();
+      }
     });
   };
   if (program.passphrase === true) {
