@@ -176,7 +176,7 @@ if (program.listen && program.connect) {
       ws = null;
     }).on('error', function error(code, description) {
       wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
-    }).on('message', function message(data, flags) {
+    }).on('message', function message(data) {
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
   }).on('error', function servererrror(error) {
@@ -226,7 +226,7 @@ if (program.listen && program.connect) {
     }).on('error', function error(code, description) {
       wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
       process.exit(-1);
-    }).on('message', function message(data, flags) {
+    }).on('message', function message(data) {
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
 
