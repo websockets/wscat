@@ -67,6 +67,7 @@ Console.prototype.print = function print(type, msg, color) {
   if (tty.isatty(1)) {
     this.clear();
     color = color || Console.Colors.Default;
+    if (!program.color) color = '';
     this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
     this.prompt();
   } else if (type === Console.Types.Incoming) {
@@ -133,6 +134,7 @@ program
   .option('--cert <cert>', 'Specify a Client SSL Certificate (--connect only)')
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
+  .option('--no-color', 'Run without color')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
