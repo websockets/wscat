@@ -135,6 +135,7 @@ program
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
   .option('--no-color', 'Run without color')
+  .option('--message <message>', 'Send message after connection was established')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -197,6 +198,7 @@ if (program.listen && program.connect) {
     if (program.ca) options.ca = fs.readFileSync(program.ca);
     if (program.cert) options.cert = fs.readFileSync(program.cert);
     if (program.key) options.key = fs.readFileSync(program.key);
+    if (program.message) options.message = program.message
 
     var headers = into({}, (program.header || []).map(function split(s) {
       return splitOnce(':', s);
@@ -216,6 +218,11 @@ if (program.listen && program.connect) {
 
     ws.on('open', function open() {
       wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
+
+      if (options.message) {
+        ws.send(options.message);
+      }
+
       wsConsole.on('line', function line(data) {
         ws.send(data);
         wsConsole.prompt();
