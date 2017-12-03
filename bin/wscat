@@ -67,7 +67,7 @@ Console.prototype.print = function print(type, msg, color) {
   if (tty.isatty(1)) {
     this.clear();
     color = color || Console.Colors.Default;
-    if (!program.color) color = '';
+    if (program.nocolor) color = '';
     this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
     this.prompt();
   } else if (type === Console.Types.Incoming) {
@@ -136,6 +136,7 @@ program
   .option('--cert <cert>', 'Specify a Client SSL Certificate (--connect only)')
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
+  .option('--no-color', 'Run without color')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -179,7 +180,11 @@ if (program.listen && program.connect) {
     }).on('error', function error(code, description) {
       wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
     }).on('message', function message(data) {
-      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+      if(program.execute){
+        wsConsole.print(Console.Types.Control, data, Console.Colors.Blue);
+	  }else{
+        wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+	  }
     });
   }).on('error', function servererrror(error) {
     wsConsole.print(Console.Types.Error, error.message, Console.Colors.Yellow);
@@ -222,20 +227,22 @@ if (program.listen && program.connect) {
     }
 
     ws.on('open', function open() {
-      wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
       if(program.execute){
         ws.send(program.execute);
         setTimeout(function () {
           ws.close();
         }, wait)
       }else{
+        wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
         wsConsole.on('line', function line(data) {
           ws.send(data);
           wsConsole.prompt();
         });
       }
     }).on('close', function close() {
-      wsConsole.print(Console.Types.Control, 'disconnected', Console.Colors.Green);
+      if(!program.execute){
+        wsConsole.print(Console.Types.Control, 'disconnected', Console.Colors.Green);
+	  }
       wsConsole.clear();
       process.exit();
     }).on('error', function error(code, description) {
