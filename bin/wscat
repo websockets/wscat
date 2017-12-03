@@ -125,6 +125,8 @@ program
   .option('-c, --connect <url>', 'connect to a websocket server')
   .option('-p, --protocol <version>', 'optional protocol version')
   .option('-o, --origin <origin>', 'optional origin')
+  .option('-x, --execute <command>', 'execute command after connecting')
+  .option('-w, --wait <seconds>', 'wait given seconds after executing command')
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol')
   .option('-n, --no-check', 'Do not check for unauthorized certificates')
@@ -134,7 +136,6 @@ program
   .option('--cert <cert>', 'Specify a Client SSL Certificate (--connect only)')
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
-  .option('--no-color', 'Run without color')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -214,12 +215,25 @@ if (program.listen && program.connect) {
     options.headers = headers;
     var ws = new WebSocket(connectUrl, options);
 
+    if (program.wait) {
+      var wait = program.wait*1000;
+    }else{
+      var wait = 2000;
+    }
+
     ws.on('open', function open() {
       wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
-      wsConsole.on('line', function line(data) {
-        ws.send(data);
-        wsConsole.prompt();
-      });
+      if(program.execute){
+        ws.send(program.execute);
+        setTimeout(function () {
+          ws.close();
+        }, wait)
+      }else{
+        wsConsole.on('line', function line(data) {
+          ws.send(data);
+          wsConsole.prompt();
+        });
+      }
     }).on('close', function close() {
       wsConsole.print(Console.Types.Control, 'disconnected', Console.Colors.Green);
       wsConsole.clear();
