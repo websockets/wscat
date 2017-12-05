@@ -67,7 +67,8 @@ Console.prototype.print = function print(type, msg, color) {
   if (tty.isatty(1)) {
     this.clear();
     color = color || Console.Colors.Default;
-    if (!program.color) color = '';
+    if (!program.color || program.execute) color = '';
+    if (program.execute) type = '';
     this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
     this.prompt();
   } else if (type === Console.Types.Incoming) {
@@ -180,11 +181,7 @@ if (program.listen && program.connect) {
     }).on('error', function error(code, description) {
       wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
     }).on('message', function message(data) {
-      if (program.execute){
-        wsConsole.print(Console.Types.Control, data, Console.Colors.Blue);
-	  } else {
-        wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
-	  }
+      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
   }).on('error', function servererrror(error) {
     wsConsole.print(Console.Types.Error, error.message, Console.Colors.Yellow);
