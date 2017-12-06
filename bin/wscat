@@ -66,9 +66,10 @@ Console.prototype.prompt = function prompt() {
 Console.prototype.print = function print(type, msg, color) {
   if (tty.isatty(1)) {
     this.clear();
-    color = color || Console.Colors.Default;
-    if (!program.color || program.execute) color = '';
-    if (program.execute) type = '';
+
+    if (program.execute) color = type = '';
+    else if (!program.color) color = '';
+
     this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
     this.prompt();
   } else if (type === Console.Types.Incoming) {
@@ -217,18 +218,12 @@ if (program.listen && program.connect) {
     options.headers = headers;
     var ws = new WebSocket(connectUrl, options);
 
-    if (program.wait) {
-      var wait = program.wait*1000;
-    } else {
-      var wait = 2000;
-    }
-
     ws.on('open', function open() {
       if (program.execute) {
         ws.send(program.execute);
         setTimeout(function () {
           ws.close();
-        }, wait)
+        }, program.wait ? program.wait * 1000 : 2000)
       } else {
         wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
         wsConsole.on('line', function line(data) {
