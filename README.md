@@ -17,7 +17,7 @@ Usage
 
 ```
 $ wscat -h
-usage: wscat [-h] [-v] [-l PORT] [-b] [-k] [-d] [address]
+usage: wscat [-h] [-v] [-l PORT] [-b] [-k] [-d] [-s SUBP] [address]
 
 Positional arguments:
   address
@@ -30,6 +30,8 @@ Optional arguments:
   -b, --binary          Use binary WebSockets.
   -k, --keep-open       Do not close the socket after EOF.
   -d, --deflate         Use per-message deflate.
+  -s SUBP, --subprotocol SUBP
+                        WebSocket subprotocol
 
 ```
 

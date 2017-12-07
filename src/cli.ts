@@ -10,6 +10,7 @@ interface ICLIOptions {
     deflate: boolean
     keepOpen: boolean
     listen?: number
+    subProto?: string
 }
 
 const parser = new ArgumentParser({version, addHelp: true})
@@ -39,6 +40,13 @@ parser.addArgument(['-d', '--deflate'], {
     help: 'Use per-message deflate.',
 })
 
+parser.addArgument(['-s', '--subprotocol'], {
+    dest: 'subProto',
+    help: 'WebSocket subprotocol',
+    metavar: 'SUBP',
+    type: String,
+})
+
 parser.addArgument(['address'], {
     nargs: '?',
     type: String,
@@ -52,6 +60,7 @@ const options: any = {
     keepOpen: args.keepOpen,
     outputStream: process.stdout,
     perMessageDeflate: args.deflate,
+    protocol: args.subProto,
 }
 
 if (args.address) {

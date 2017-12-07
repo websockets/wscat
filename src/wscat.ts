@@ -24,6 +24,7 @@ export interface IOptions {
     keepOpen: boolean
     outputStream: NodeJS.WritableStream
     perMessageDeflate: boolean
+    protocol: string
 }
 
 export interface IConnectOptions extends IOptions {
