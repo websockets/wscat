@@ -174,8 +174,8 @@ if (program.listen && program.connect) {
     wsConsole.prompt();
     wsConsole.print(Console.Types.Control, 'client connected', Console.Colors.Green);
 
-    ws.on('close', function close() {
-      wsConsole.print(Console.Types.Control, 'disconnected', Console.Colors.Green);
+    ws.on('close', function close(code) {
+      wsConsole.print(Console.Types.Control, 'disconnected (code: ' + code + ')', Console.Colors.Green);
       wsConsole.clear();
       wsConsole.pause();
       ws = null;
@@ -231,9 +231,9 @@ if (program.listen && program.connect) {
           wsConsole.prompt();
         });
       }
-    }).on('close', function close() {
+    }).on('close', function close(code) {
       if (!program.execute) {
-        wsConsole.print(Console.Types.Control, 'disconnected', Console.Colors.Green);
+        wsConsole.print(Console.Types.Control, 'disconnected (code: ' + code + ')', Console.Colors.Green);
       }
       wsConsole.clear();
       process.exit();
