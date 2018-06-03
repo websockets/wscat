@@ -22,25 +22,27 @@ var program = require('commander')
 /**
  * InputReader - processes console input.
  */
-function Console() {
+function Console(batchMode = false) {
   if (!(this instanceof Console)) return new Console();
 
   this.stdin = process.stdin;
   this.stdout = process.stdout;
+  this.batchMode = batchMode;
+  if (!this.batchMode) {
+    this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
 
-  this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
+    var self = this;
 
-  var self = this;
+    this.readlineInterface.on('line', function line(data) {
+      self.emit('line', data);
+    }).on('close', function close() {
+      self.emit('close');
+    });
 
-  this.readlineInterface.on('line', function line(data) {
-    self.emit('line', data);
-  }).on('close', function close() {
-    self.emit('close');
-  });
-
-  this._resetInput = function() {
-    self.clear();
-  };
+    this._resetInput = function() {
+      self.clear();
+    };
+  }
 }
 
 util.inherits(Console, events.EventEmitter);
@@ -71,7 +73,9 @@ Console.prototype.print = function print(type, msg, color) {
     else if (!program.color) color = '';
 
     this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
-    this.prompt();
+    if (!this.batchMode) {
+      this.prompt();
+    }
   } else if (type === Console.Types.Incoming) {
     this.stdout.write(msg + '\n');
   } else {
@@ -139,6 +143,7 @@ program
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
   .option('--no-color', 'Run without color')
+  .option('-b, --batch', 'Take batch newline-separated input from stdin (for scripting).')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -160,9 +165,11 @@ if (program.listen && program.connect) {
   });
 
   wsConsole.on('line', function line(data) {
-    if (ws) {
-      ws.send(data);
-      wsConsole.prompt();
+    if (!program.batch) {
+      if (ws) {
+        ws.send(data);
+        wsConsole.prompt();
+      }
     }
   });
 
@@ -191,7 +198,7 @@ if (program.listen && program.connect) {
 } else if (program.connect) {
   var options = {};
   var cont = function () {
-    var wsConsole = new Console();
+    var wsConsole = new Console(program.batch);
 
     if (program.protocol) options.protocolVersion = +program.protocol;
     if (program.origin) options.origin = program.origin;
@@ -218,6 +225,14 @@ if (program.listen && program.connect) {
     options.headers = headers;
     var ws = new WebSocket(connectUrl, options);
 
+    var batchMsg = '';
+    if (program.batch) {
+      // Read from stdin
+      process.stdin.on('data', function(data) {
+        batchMsg = data;
+      });
+    }
+
     ws.on('open', function open() {
       if (program.execute) {
         ws.send(program.execute);
@@ -225,11 +240,30 @@ if (program.listen && program.connect) {
           ws.close();
         }, program.wait ? program.wait * 1000 : 2000)
       } else {
-        wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
-        wsConsole.on('line', function line(data) {
-          ws.send(data);
-          wsConsole.prompt();
-        });
+        if (program.batch) {
+          var batchMsgLines = batchMsg.toString().trim().split("\n");
+          var sendComplete = batchMsgLines.map(function(x) { return false; });
+          batchMsgLines.forEach(function eachLine(line, i) {
+            ws.send(line, function ack(err) {
+              sendComplete[i] = true;
+            });
+          });
+          // Poll for completion
+          let pollIntervalMs = 500
+          setTimeout(function checkDone() {
+            if (sendComplete.length === sendComplete.filter(function(sc) { return sc; }).length) {
+              process.exit(0);
+            } else {
+              setTimeout(checkDone, pollIntervalMs);
+            }
+          }, pollIntervalMs);
+        } else {
+          wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
+          wsConsole.on('line', function line(data) {
+            ws.send(data);
+            wsConsole.prompt();
+          });
+        }
       }
     }).on('close', function close(code) {
       if (!program.execute) {
@@ -241,7 +275,11 @@ if (program.listen && program.connect) {
       wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
       process.exit(-1);
     }).on('message', function message(data) {
-      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+      if (program.batch) {
+        console.log(data);
+      } else {
+        wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+      }
     });
 
     wsConsole.on('close', function close() {
