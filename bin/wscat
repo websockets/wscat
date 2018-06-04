@@ -139,6 +139,7 @@ program
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
   .option('--no-color', 'Run without color')
+  .option('--slash', 'Enable slash commands for control frames (ping, pong, close)')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -227,7 +228,28 @@ if (program.listen && program.connect) {
       } else {
         wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
         wsConsole.on('line', function line(data) {
-          ws.send(data);
+          if (program.slash && data[0] === '/') {
+            switch(data.substr(1)) {
+              case 'ping':
+                console.log('Sending ping');
+                ws.ping(function() { });
+                break;
+              case 'pong':
+                console.log('Sending pong');
+                ws.pong(function() { });
+                break;
+              case 'close':
+                console.log('Sending close');
+                // TODO: Allow specifying the close status code.
+                var WS_CLOSE_NORMAL = 1000;
+                ws.close(WS_CLOSE_NORMAL);
+                break;
+              default:
+                wsConsole.print(Console.Types.Error, 'Unrecognized slash command.', Console.Colors.Yellow);
+            }
+          } else {
+            ws.send(data);
+          }
           wsConsole.prompt();
         });
       }
@@ -242,6 +264,10 @@ if (program.listen && program.connect) {
       process.exit(-1);
     }).on('message', function message(data) {
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+    }).on('ping', function receivePing(data) {
+      wsConsole.print(Console.Types.Incoming, 'Received ping', Console.Colors.Blue);
+    }).on('pong', function receivePong(data) {
+      wsConsole.print(Console.Types.Incoming, 'Received pong', Console.Colors.Blue);
     });
 
     wsConsole.on('close', function close() {
