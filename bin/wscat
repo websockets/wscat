@@ -229,7 +229,7 @@ if (program.listen && program.connect) {
         wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
         wsConsole.on('line', function line(data) {
           if (program.slash && data[0] === '/') {
-            switch(data.substr(1)) {
+            switch(data.split(/\s+/)[0].substr(1)) {
               case 'ping':
                 console.log('Sending ping');
                 ws.ping(function() { });
@@ -240,9 +240,12 @@ if (program.listen && program.connect) {
                 break;
               case 'close':
                 console.log('Sending close');
-                // TODO: Allow specifying the close status code.
-                var WS_CLOSE_NORMAL = 1000;
-                ws.close(WS_CLOSE_NORMAL);
+                var toks = data.split(/\s+/);
+                var closeStatusCode = 1000;
+                if (toks.length === 2) {
+                  closeStatusCode = parseInt(toks[1]);
+                }
+                ws.close(closeStatusCode);
                 break;
               default:
                 wsConsole.print(Console.Types.Error, 'Unrecognized slash command.', Console.Colors.Yellow);
