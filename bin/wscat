@@ -228,15 +228,16 @@ if (program.listen && program.connect) {
       } else {
         wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
         wsConsole.on('line', function line(data) {
+          var noop = function() { };
           if (program.slash && data[0] === '/') {
             switch(data.split(/\s+/)[0].substr(1)) {
               case 'ping':
                 console.log('Sending ping');
-                ws.ping(function() { });
+                ws.ping(noop);
                 break;
               case 'pong':
                 console.log('Sending pong');
-                ws.pong(function() { });
+                ws.pong(noop);
                 break;
               case 'close':
                 console.log('Sending close');
