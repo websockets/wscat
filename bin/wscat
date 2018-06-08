@@ -228,9 +228,10 @@ if (program.listen && program.connect) {
       } else {
         wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
         wsConsole.on('line', function line(data) {
-          var noop = function() { };
+          const noop = function() { };
           if (program.slash && data[0] === '/') {
-            switch(data.split(/\s+/)[0].substr(1)) {
+            const toks = data.split(/\s+/);
+            switch(toks[0].substr(1)) {
               case 'ping':
                 ws.ping(noop);
                 break;
@@ -238,8 +239,7 @@ if (program.listen && program.connect) {
                 ws.pong(noop);
                 break;
               case 'close':
-                var toks = data.split(/\s+/);
-                var closeStatusCode = 1000;
+                let closeStatusCode = 1000;
                 if (toks.length === 2) {
                   closeStatusCode = parseInt(toks[1]);
                 }
