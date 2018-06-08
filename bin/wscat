@@ -204,7 +204,7 @@ if (program.listen && program.connect) {
     }));
 
     if (program.auth) {
-      headers.Authorization = 'Basic '+ new Buffer(program.auth).toString('base64');
+      headers.Authorization = 'Basic ' + Buffer.from(program.auth).toString('base64');
     }
 
     let connectUrl = program.connect;
