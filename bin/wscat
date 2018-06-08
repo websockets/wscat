@@ -232,15 +232,12 @@ if (program.listen && program.connect) {
           if (program.slash && data[0] === '/') {
             switch(data.split(/\s+/)[0].substr(1)) {
               case 'ping':
-                console.log('Sending ping');
                 ws.ping(noop);
                 break;
               case 'pong':
-                console.log('Sending pong');
                 ws.pong(noop);
                 break;
               case 'close':
-                console.log('Sending close');
                 var toks = data.split(/\s+/);
                 var closeStatusCode = 1000;
                 if (toks.length === 2) {
