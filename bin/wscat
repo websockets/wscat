@@ -139,7 +139,7 @@ program
   .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
   .option('--no-color', 'Run without color')
-  .option('--slash', 'Enable slash commands for control frames (ping, pong, close)')
+  .option('--slash', 'Enable slash commands for control frames (/ping, /pong, /close [code [, reason]])')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -240,10 +240,18 @@ if (program.listen && program.connect) {
                 break;
               case 'close':
                 let closeStatusCode = 1000;
-                if (toks.length === 2) {
+                let closeReason = '';
+                if (toks.length >= 2) {
                   closeStatusCode = parseInt(toks[1]);
                 }
-                ws.close(closeStatusCode);
+                if (toks.length >= 3) {
+                  closeReason = toks.slice(2).join(' ');
+                }
+                if (closeReason.length > 0) {
+                  ws.close(closeStatusCode, closeReason);
+                } else {
+                  ws.close(closeStatusCode);
+                }
                 break;
               default:
                 wsConsole.print(Console.Types.Error, 'Unrecognized slash command.', Console.Colors.Yellow);
