@@ -26,16 +26,14 @@ function Console() {
 
   this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
 
-  const self = this;
-
-  this.readlineInterface.on('line', function line(data) {
-    self.emit('line', data);
-  }).on('close', function close() {
-    self.emit('close');
+  this.readlineInterface.on('line', (data) => {
+    this.emit('line', data);
+  }).on('close', () => {
+    this.emit('close');
   });
 
-  this._resetInput = function() {
-    self.clear();
+  this._resetInput = () => {
+    this.clear();
   };
 }
 
