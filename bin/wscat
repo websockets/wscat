@@ -136,6 +136,7 @@ program
   .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
   .option('--no-color', 'Run without color')
   .option('--slash', 'Enable slash commands for control frames (/ping, /pong, /close [code [, reason]])')
+  .option('--pretty', 'Attempt to pretty print responses using JSON.stringify.')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -268,7 +269,15 @@ if (program.listen && program.connect) {
       wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
       process.exit(-1);
     }).on('message', function message(data) {
-      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+      let s = data;
+      if (program.pretty) {
+        try {
+          s = '\n' + JSON.stringify(JSON.parse(data), null, 4);
+        } catch(e) {
+          s = data;
+        }
+      }
+      wsConsole.print(Console.Types.Incoming, s, Console.Colors.Blue);
     }).on('ping', function ping() {
       wsConsole.print(Console.Types.Incoming, 'Received ping', Console.Colors.Blue);
     }).on('pong', function pong() {
