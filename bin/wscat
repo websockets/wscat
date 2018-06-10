@@ -272,7 +272,7 @@ if (program.listen && program.connect) {
       let s = data;
       if (program.pretty) {
         try {
-          s = '\n' + JSON.stringify(JSON.parse(data), null, 4);
+          s = JSON.stringify(JSON.parse(data), null, 4);
         } catch(e) {
           s = data;
         }
