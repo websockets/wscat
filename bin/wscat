@@ -6,86 +6,93 @@
  * MIT Licensed
  */
 
-const program = require('commander');
-const readline = require('readline');
-const read = require('read');
-const events = require('events');
-const WebSocket = require('ws');
-const util = require('util');
+const EventEmitter = require('events');
 const fs = require('fs');
+const program = require('commander');
+const read = require('read');
+const readline = require('readline');
 const tty = require('tty');
+const WebSocket = require('ws');
 
 /**
  * InputReader - processes console input.
+ *
+ * @extends EventEmitter
  */
-function Console() {
-  if (!(this instanceof Console)) return new Console();
+class Console extends EventEmitter {
+  constructor() {
+    super();
 
-  this.stdin = process.stdin;
-  this.stdout = process.stdout;
+    this.stdin = process.stdin;
+    this.stdout = process.stdout;
 
-  this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
+    this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
 
-  this.readlineInterface.on('line', (data) => {
-    this.emit('line', data);
-  }).on('close', () => {
-    this.emit('close');
-  });
+    this.readlineInterface
+      .on('line', data => {
+        this.emit('line', data);
+      })
+      .on('close', () => {
+        this.emit('close');
+      });
 
-  this._resetInput = () => {
-    this.clear();
-  };
+    this._resetInput = () => {
+      this.clear();
+    };
+  }
+
+  static get Colors() {
+    return {
+      Red: '\u001b[31m',
+      Green: '\u001b[32m',
+      Yellow: '\u001b[33m',
+      Blue: '\u001b[34m',
+      Default: '\u001b[39m'
+    };
+  }
+
+  static get Types() {
+    return {
+      Incoming: '< ',
+      Control: '',
+      Error: 'error: '
+    };
+  }
+
+  prompt() {
+    this.readlineInterface.prompt();
+  }
+
+  print(type, msg, color) {
+    if (tty.isatty(1)) {
+      this.clear();
+
+      if (program.execute) color = type = '';
+      else if (!program.color) color = '';
+
+      this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
+      this.prompt();
+    } else if (type === Console.Types.Incoming) {
+      this.stdout.write(msg + '\n');
+    } else {
+      // is a control message and we're not in a tty... drop it.
+    }
+  }
+
+  clear() {
+    if (tty.isatty(1)) {
+      this.stdout.write('\u001b[2K\u001b[3D');
+    }
+  }
+
+  pause() {
+    this.stdin.on('keypress', this._resetInput);
+  }
+
+  resume() {
+    this.stdin.removeListener('keypress', this._resetInput);
+  }
 }
-
-util.inherits(Console, events.EventEmitter);
-
-Console.Colors = {
-  Red: '\u001b[31m',
-  Green: '\u001b[32m',
-  Yellow: '\u001b[33m',
-  Blue: '\u001b[34m',
-  Default: '\u001b[39m'
-};
-
-Console.Types = {
-  Incoming: '< ',
-  Control: '',
-  Error: 'error: '
-};
-
-Console.prototype.prompt = function prompt() {
-  this.readlineInterface.prompt();
-};
-
-Console.prototype.print = function print(type, msg, color) {
-  if (tty.isatty(1)) {
-    this.clear();
-
-    if (program.execute) color = type = '';
-    else if (!program.color) color = '';
-
-    this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
-    this.prompt();
-  } else if (type === Console.Types.Incoming) {
-    this.stdout.write(msg + '\n');
-  } else {
-    // is a control message and we're not in a tty... drop it.
-  }
-};
-
-Console.prototype.clear = function clear() {
-  if (tty.isatty(1)) {
-    this.stdout.write('\u001b[2K\u001b[E');
-  }
-};
-
-Console.prototype.pause = function pausing() {
-  this.stdin.on('keypress', this._resetInput);
-};
-
-Console.prototype.resume = function resume() {
-  this.stdin.removeListener('keypress', this._resetInput);
-};
 
 function collect(val, memo) {
   memo.push(val);
@@ -111,69 +118,108 @@ program
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'Do not check for unauthorized certificates')
-  .option('-H, --header <header:value>', 'Set an HTTP header. Repeat to set multiple. (--connect only)', collect, [])
-  .option('--auth <username:password>', 'Add basic HTTP authentication header. (--connect only)')
+  .option(
+    '-H, --header <header:value>',
+    'Set an HTTP header. Repeat to set multiple. (--connect only)',
+    collect,
+    []
+  )
+  .option(
+    '--auth <username:password>',
+    'Add basic HTTP authentication header. (--connect only)'
+  )
   .option('--ca <ca>', 'Specify a Certificate Authority (--connect only)')
   .option('--cert <cert>', 'Specify a Client SSL Certificate (--connect only)')
-  .option('--key <key>', 'Specify a Client SSL Certificate\'s key (--connect only)')
-  .option('--passphrase [passphrase]', 'Specify a Client SSL Certificate Key\'s passphrase (--connect only). If you don\'t provide a value, it will be prompted for.')
+  .option(
+    '--key <key>',
+    "Specify a Client SSL Certificate's key (--connect only)"
+  )
+  .option(
+    '--passphrase [passphrase]',
+    "Specify a Client SSL Certificate Key's passphrase (--connect only). " +
+      "If you don't provide a value, it will be prompted for."
+  )
   .option('--no-color', 'Run without color')
-  .option('--slash', 'Enable slash commands for control frames (/ping, /pong, /close [code [, reason]])')
+  .option(
+    '--slash',
+    'Enable slash commands for control frames ' +
+      '(/ping, /pong, /close [code [, reason]])'
+  )
   .parse(process.argv);
 
 if (program.listen && program.connect) {
   console.error('\u001b[33merror: use either --listen or --connect\u001b[39m');
   process.exit(-1);
-} else if (program.listen) {
+}
+
+if (program.listen) {
   const wsConsole = new Console();
   wsConsole.pause();
 
   let ws = null;
-  const wss = new WebSocket.Server({ port: program.listen }, function listening() {
-    wsConsole.print(Console.Types.Control, 'listening on port ' + program.listen + ' (press CTRL+C to quit)', Console.Colors.Green);
+  const wss = new WebSocket.Server({ port: program.listen }, () => {
+    wsConsole.print(
+      Console.Types.Control,
+      `listening on port ${program.listen} (press CTRL+C to quit)`,
+      Console.Colors.Green
+    );
     wsConsole.clear();
   });
 
-  wsConsole.on('close', function close() {
+  wsConsole.on('close', () => {
     if (ws) ws.close();
     process.exit(0);
   });
 
-  wsConsole.on('line', function line(data) {
+  wsConsole.on('line', data => {
     if (ws) {
       ws.send(data);
       wsConsole.prompt();
     }
   });
 
-  wss.on('connection', function(newClient) {
+  wss.on('connection', newClient => {
     if (ws) return newClient.terminate();
 
     ws = newClient;
     wsConsole.resume();
     wsConsole.prompt();
-    wsConsole.print(Console.Types.Control, 'client connected', Console.Colors.Green);
+    wsConsole.print(
+      Console.Types.Control,
+      'client connected',
+      Console.Colors.Green
+    );
 
-    ws.on('close', function close(code) {
-      wsConsole.print(Console.Types.Control, 'disconnected (code: ' + code + ')', Console.Colors.Green);
+    ws.on('close', code => {
+      wsConsole.print(
+        Console.Types.Control,
+        `disconnected (code: ${code})`,
+        Console.Colors.Green
+      );
       wsConsole.clear();
       wsConsole.pause();
       ws = null;
-    }).on('error', function error(code, description) {
-      wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
-    }).on('message', function message(data) {
+    });
+
+    ws.on('error', err => {
+      wsConsole.print(Console.Types.Error, err.message, Console.Colors.Yellow);
+    });
+
+    ws.on('message', data => {
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
-  }).on('error', function servererrror(error) {
-    wsConsole.print(Console.Types.Error, error.message, Console.Colors.Yellow);
+  });
+
+  wss.on('error', err => {
+    wsConsole.print(Console.Types.Error, err.message, Console.Colors.Yellow);
     process.exit(-1);
   });
 } else if (program.connect) {
   const options = {};
-  const cont = function () {
+  const cont = () => {
     const wsConsole = new Console();
 
-    const headers = program.header.reduce(function reduce(acc, cur) {
+    const headers = program.header.reduce((acc, cur) => {
       const i = cur.indexOf(':');
       const key = cur.slice(0, i);
       const value = cur.slice(i + 1);
@@ -181,7 +227,11 @@ if (program.listen && program.connect) {
       return acc;
     }, {});
 
-    if (program.host) headers.host = program.host;
+    if (program.auth) {
+      headers.Authorization =
+        'Basic ' + Buffer.from(program.auth).toString('base64');
+    }
+    if (program.host) headers.Host = program.host;
     if (program.protocol) options.protocolVersion = +program.protocol;
     if (program.origin) options.origin = program.origin;
     if (!program.check) options.rejectUnauthorized = program.check;
@@ -189,30 +239,31 @@ if (program.listen && program.connect) {
     if (program.cert) options.cert = fs.readFileSync(program.cert);
     if (program.key) options.key = fs.readFileSync(program.key);
 
-    if (program.auth) {
-      headers.Authorization = 'Basic ' + Buffer.from(program.auth).toString('base64');
-    }
-
     let connectUrl = program.connect;
     if (!connectUrl.match(/\w+:\/\/.*$/i)) {
-      connectUrl = 'ws://' + connectUrl;
+      connectUrl = `ws://${connectUrl}`;
     }
 
     options.headers = headers;
     const ws = new WebSocket(connectUrl, program.subprotocol, options);
 
-    ws.on('open', function open() {
+    ws.on('open', () => {
       if (program.execute) {
         ws.send(program.execute);
-        setTimeout(function () {
+        setTimeout(() => {
           ws.close();
         }, program.wait ? program.wait * 1000 : 2000);
       } else {
-        wsConsole.print(Console.Types.Control, 'connected (press CTRL+C to quit)', Console.Colors.Green);
-        wsConsole.on('line', function line(data) {
+        wsConsole.print(
+          Console.Types.Control,
+          'connected (press CTRL+C to quit)',
+          Console.Colors.Green
+        );
+
+        wsConsole.on('line', data => {
           if (program.slash && data[0] === '/') {
             const toks = data.split(/\s+/);
-            switch(toks[0].substr(1)) {
+            switch (toks[0].substr(1)) {
               case 'ping':
                 ws.ping(noop);
                 break;
@@ -236,7 +287,11 @@ if (program.listen && program.connect) {
                 break;
               }
               default:
-                wsConsole.print(Console.Types.Error, 'Unrecognized slash command.', Console.Colors.Yellow);
+                wsConsole.print(
+                  Console.Types.Error,
+                  'Unrecognized slash command.',
+                  Console.Colors.Yellow
+                );
             }
           } else {
             ws.send(data);
@@ -244,38 +299,63 @@ if (program.listen && program.connect) {
           wsConsole.prompt();
         });
       }
-    }).on('close', function close(code) {
+    });
+
+    ws.on('close', code => {
       if (!program.execute) {
-        wsConsole.print(Console.Types.Control, 'disconnected (code: ' + code + ')', Console.Colors.Green);
+        wsConsole.print(
+          Console.Types.Control,
+          `disconnected (code: ${code})`,
+          Console.Colors.Green
+        );
       }
       wsConsole.clear();
       process.exit();
-    }).on('error', function error(code, description) {
-      wsConsole.print(Console.Types.Error, code + (description ? ' ' + description : ''), Console.Colors.Yellow);
-      process.exit(-1);
-    }).on('message', function message(data) {
-      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
-    }).on('ping', function ping() {
-      wsConsole.print(Console.Types.Incoming, 'Received ping', Console.Colors.Blue);
-    }).on('pong', function pong() {
-      wsConsole.print(Console.Types.Incoming, 'Received pong', Console.Colors.Blue);
     });
 
-    wsConsole.on('close', function close() {
+    ws.on('error', err => {
+      wsConsole.print(Console.Types.Error, err.message, Console.Colors.Yellow);
+      process.exit(-1);
+    });
+
+    ws.on('message', data => {
+      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+    });
+
+    ws.on('ping', () => {
+      wsConsole.print(
+        Console.Types.Incoming,
+        'Received ping',
+        Console.Colors.Blue
+      );
+    });
+
+    ws.on('pong', () => {
+      wsConsole.print(
+        Console.Types.Incoming,
+        'Received pong',
+        Console.Colors.Blue
+      );
+    });
+
+    wsConsole.on('close', () => {
       ws.close();
       process.exit();
     });
   };
+
   if (program.passphrase === true) {
-    const readOptions = {
-      prompt: 'Passphrase: ',
-      silent: true,
-      replace: '*'
-    };
-    read(readOptions, function(err, passphrase) {
-      options.passphrase = passphrase;
-      cont();
-    });
+    read(
+      {
+        prompt: 'Passphrase: ',
+        silent: true,
+        replace: '*'
+      },
+      (err, passphrase) => {
+        options.passphrase = passphrase;
+        cont();
+      }
+    );
   } else if (typeof program.passphrase === 'string') {
     options.passphrase = program.passphrase;
     cont();
