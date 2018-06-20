@@ -92,19 +92,6 @@ function collect(val, memo) {
   return memo;
 }
 
-function into(obj, kvals) {
-  kvals.forEach(function (kv) {
-    obj[kv[0]] = kv[1];
-  });
-
-  return obj;
-}
-
-function splitOnce(sep, str) { // sep can be either String or RegExp
-  const tokens = str.split(sep);
-  return [tokens[0], str.replace(sep, '').substr(tokens[0].length)];
-}
-
 function noop() {}
 
 /**
@@ -186,17 +173,21 @@ if (program.listen && program.connect) {
   const cont = function () {
     const wsConsole = new Console();
 
+    const headers = program.header.reduce(function reduce(acc, cur) {
+      const i = cur.indexOf(':');
+      const key = cur.slice(0, i);
+      const value = cur.slice(i + 1);
+      acc[key] = value;
+      return acc;
+    }, {});
+
+    if (program.host) headers.host = program.host;
     if (program.protocol) options.protocolVersion = +program.protocol;
     if (program.origin) options.origin = program.origin;
-    if (program.host) options.host = program.host;
     if (!program.check) options.rejectUnauthorized = program.check;
     if (program.ca) options.ca = fs.readFileSync(program.ca);
     if (program.cert) options.cert = fs.readFileSync(program.cert);
     if (program.key) options.key = fs.readFileSync(program.key);
-
-    const headers = into({}, program.header.map(function split(s) {
-      return splitOnce(':', s);
-    }));
 
     if (program.auth) {
       headers.Authorization = 'Basic ' + Buffer.from(program.auth).toString('base64');
