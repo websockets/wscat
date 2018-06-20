@@ -87,13 +87,9 @@ Console.prototype.resume = function resume() {
   this.stdin.removeListener('keypress', this._resetInput);
 };
 
-function appender(xs) {
-  xs = xs || [];
-
-  return function (x) {
-    xs.push(x);
-    return xs;
-  };
+function collect(val, memo) {
+  memo.push(val);
+  return memo;
 }
 
 function into(obj, kvals) {
@@ -126,9 +122,9 @@ program
   .option('-x, --execute <command>', 'execute command after connecting')
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
   .option('--host <host>', 'optional host')
-  .option('-s, --subprotocol <protocol>', 'optional subprotocol')
+  .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'Do not check for unauthorized certificates')
-  .option('-H, --header <header:value>', 'Set an HTTP header. Repeat to set multiple. (--connect only)', appender(), [])
+  .option('-H, --header <header:value>', 'Set an HTTP header. Repeat to set multiple. (--connect only)', collect, [])
   .option('--auth <username:password>', 'Add basic HTTP authentication header. (--connect only)')
   .option('--ca <ca>', 'Specify a Certificate Authority (--connect only)')
   .option('--cert <cert>', 'Specify a Client SSL Certificate (--connect only)')
@@ -192,14 +188,13 @@ if (program.listen && program.connect) {
 
     if (program.protocol) options.protocolVersion = +program.protocol;
     if (program.origin) options.origin = program.origin;
-    if (program.subprotocol) options.protocol = program.subprotocol;
     if (program.host) options.host = program.host;
     if (!program.check) options.rejectUnauthorized = program.check;
     if (program.ca) options.ca = fs.readFileSync(program.ca);
     if (program.cert) options.cert = fs.readFileSync(program.cert);
     if (program.key) options.key = fs.readFileSync(program.key);
 
-    const headers = into({}, (program.header || []).map(function split(s) {
+    const headers = into({}, program.header.map(function split(s) {
       return splitOnce(':', s);
     }));
 
@@ -213,7 +208,7 @@ if (program.listen && program.connect) {
     }
 
     options.headers = headers;
-    const ws = new WebSocket(connectUrl, options);
+    const ws = new WebSocket(connectUrl, program.subprotocol, options);
 
     ws.on('open', function open() {
       if (program.execute) {
