@@ -1,6 +1,6 @@
 {
   "name": "wscat",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "WebSocket cat",
   "main": "index.js",
   "scripts": {
@@ -18,9 +18,9 @@
   "author": "Arnout Kazemier, Einar Otto Stangvik",
   "license": "MIT",
   "dependencies": {
-    "commander": "~2.15.0",
+    "commander": "~2.17.0",
     "read": "~1.0.7",
-    "ws": "~5.2.0"
+    "ws": "~6.0.0"
   },
   "bin": {
     "wscat": "./bin/wscat"
