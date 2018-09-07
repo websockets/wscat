@@ -18,7 +18,7 @@
   "author": "Arnout Kazemier, Einar Otto Stangvik",
   "license": "MIT",
   "dependencies": {
-    "commander": "~2.17.0",
+    "commander": "~2.18.0",
     "read": "~1.0.7",
     "ws": "~6.0.0"
   },
