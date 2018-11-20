@@ -1,6 +1,6 @@
 {
   "name": "wscat2",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Unix-style WebSocket cat",
   "author": "Johan Nordberg",
   "license": "BSD-3-Clause",
