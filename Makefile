@@ -21,7 +21,7 @@ lib: $(SRC_FILES) node_modules
 	sed -i "" "1s/ts-node/node/" lib/cli.js && \
 	rm lib/cli.d.ts && \
 	VERSION="$$(node -p 'require("./package.json").version')"; \
-	echo "module.exports = '$${VERSION}';" > lib/version.js && \
+	echo "exports.default = '$${VERSION}';" > lib/version.js && \
 	touch lib
 
 node_modules:
