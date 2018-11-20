@@ -1,8 +1,8 @@
 #!/usr/bin/env ts-node
 
 import {ArgumentParser} from 'argparse'
+import version from './version'
 import * as wscat from './wscat'
-const {version} = require('./../package.json')
 
 interface ICLIOptions {
     address?: string
