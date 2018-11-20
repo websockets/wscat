@@ -12,6 +12,7 @@ Installation
 npm install -g wscat2
 ```
 
+
 Usage
 -----
 
@@ -34,6 +35,7 @@ Optional arguments:
                         WebSocket subprotocol
 
 ```
+
 
 Examples
 --------
@@ -100,7 +102,15 @@ Note that you can have the client send the file as well, after the connection ha
 $ echo '{"op":"unconfirmed_sub"}' | wscat -k wss://ws.blockchain.info/inv
 ```
 
-The `-k` option is used to keep the socket open after the command has been sent, allowing us to read the continuous stream of bitcoin transactions.
+The `-k` option is used to keep the socket open after the command has been sent, allowing us to read the continuous stream of Bitcoin transactions.
+
+
+Developing
+----------
+
+This node.js program is written in TypeScript and has a compile step that you can run with `make lib`. For developing it is convenient to install the `ts-node` and `typescript` modules  globally (`npm i -g ..`), this will allow you to directly execute the programs entry-point: `./src/cli.ts`.
+
+Use `make test` to run the tests and lint check and `make lint` to run the linter in formatter mode.
 
 
 License
