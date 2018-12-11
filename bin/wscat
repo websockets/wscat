@@ -146,7 +146,7 @@ program
       '(/ping, /pong, /close [code [, reason]])'
   )
   .option(
-    '--quiet',
+    '-q, --quiet',
     'Stops incoming ping control frame being printed to console.'
   )
   .parse(process.argv);
