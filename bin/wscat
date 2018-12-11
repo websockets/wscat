@@ -145,6 +145,10 @@ program
     'Enable slash commands for control frames ' +
       '(/ping, /pong, /close [code [, reason]])'
   )
+  .option(
+    '--quiet',
+    'Stops incoming ping control frame being printed to console.'
+  )
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -323,11 +327,13 @@ if (program.listen) {
     });
 
     ws.on('ping', () => {
-      wsConsole.print(
-        Console.Types.Incoming,
-        'Received ping',
-        Console.Colors.Blue
-      );
+      if (!program.quiet){
+        wsConsole.print(
+          Console.Types.Incoming,
+          'Received ping',
+          Console.Colors.Blue
+        );
+      }
     });
 
     ws.on('pong', () => {
