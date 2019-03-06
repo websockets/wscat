@@ -20,7 +20,7 @@
   "dependencies": {
     "commander": "~2.19.0",
     "read": "~1.0.7",
-    "ws": "~6.1.0"
+    "ws": "~6.2.0"
   },
   "bin": {
     "wscat": "./bin/wscat"
