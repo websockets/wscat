@@ -298,13 +298,12 @@ if (program.listen) {
     });
 
     ws.on('close', code => {
-      if (!program.execute) {
-        wsConsole.print(
-          Console.Types.Control,
-          `disconnected (code: ${code})`,
-          Console.Colors.Green
-        );
-      }
+      wsConsole.print(
+        Console.Types.Control,
+        `disconnected (code: ${code})`,
+        Console.Colors.Green
+      );
+      
       wsConsole.clear();
       process.exit();
     });
