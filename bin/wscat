@@ -114,7 +114,6 @@ program
   .option('-p, --protocol <version>', 'optional protocol version')
   .option('-o, --origin <origin>', 'optional origin')
   .option('-x, --execute <command>', 'execute command after connecting')
-  .option('-w, --wait <seconds>', 'wait given seconds after executing command')
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'Do not check for unauthorized certificates')
@@ -250,9 +249,6 @@ if (program.listen) {
     ws.on('open', () => {
       if (program.execute) {
         ws.send(program.execute);
-        setTimeout(() => {
-          ws.close();
-        }, program.wait ? program.wait * 1000 : 2000);
       } else {
         wsConsole.print(
           Console.Types.Control,
