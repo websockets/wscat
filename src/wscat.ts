@@ -29,7 +29,7 @@ export interface IOptions {
 
 export interface IConnectOptions extends IOptions {
     address: string
-    headers: string[]
+    headers: { [key: string]: string; }
 }
 
 export interface IListenOptions extends IOptions {

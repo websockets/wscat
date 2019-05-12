@@ -29,7 +29,7 @@ parser.addArgument(['-b', '--binary'], {
 })
 
 parser.addArgument(['-H', '--header'], {
-    action: 'append',
+    action: 'appendConst',
     help: 'Specify a custom HTTP request header. May be given multiple times.',
 })
 
@@ -60,9 +60,17 @@ parser.addArgument(['address'], {
 
 const args = parser.parseArgs() as ICLIOptions
 
+const headers: any = {}
+args.header.forEach( (txt) => {
+console.log('header', txt)
+    // const [ name, value ] = txt.split(/\s*:\s*/, txt)
+    // headers[name] = value
+} )
+console.log("headers", headers);
+
 const options: any = {
     binary: args.binary,
-    headers: args.header,
+    headers,
     inputStream: process.stdin,
     keepOpen: args.keepOpen,
     outputStream: process.stdout,
