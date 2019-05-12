@@ -11,6 +11,7 @@ interface ICLIOptions {
     keepOpen: boolean
     listen?: number
     subProto?: string
+    header: string[]
 }
 
 const parser = new ArgumentParser({version, addHelp: true})
@@ -25,6 +26,11 @@ parser.addArgument(['-b', '--binary'], {
     action: 'storeTrue',
     defaultValue: false,
     help: 'Use binary WebSockets.',
+})
+
+parser.addArgument(['-H', '--header'], {
+    action: 'append',
+    help: 'Specify a custom HTTP request header. May be given multiple times.',
 })
 
 parser.addArgument(['-k', '--keep-open'], {
@@ -56,6 +62,7 @@ const args = parser.parseArgs() as ICLIOptions
 
 const options: any = {
     binary: args.binary,
+    headers: args.header,
     inputStream: process.stdin,
     keepOpen: args.keepOpen,
     outputStream: process.stdout,

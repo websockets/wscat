@@ -29,6 +29,7 @@ export interface IOptions {
 
 export interface IConnectOptions extends IOptions {
     address: string
+    headers: string[]
 }
 
 export interface IListenOptions extends IOptions {
@@ -58,7 +59,7 @@ function setup(options: IOptions, socket: WebSocket) {
 }
 
 export function connect(options: IConnectOptions) {
-    const socket = new WebSocket(options.address, options)
+    const socket = new WebSocket(options.address, undefined, options)
     setup(options, socket)
 }
 
