@@ -10,6 +10,7 @@ interface ICLIOptions {
     deflate: boolean
     keepOpen: boolean
     listen?: number
+    noCheck: boolean
     subProto?: string
     header: string[]
 }
@@ -29,8 +30,15 @@ parser.addArgument(['-b', '--binary'], {
 })
 
 parser.addArgument(['-H', '--header'], {
-    action: 'appendConst',
+    action: 'append',
     help: 'Specify a custom HTTP request header. May be given multiple times.',
+})
+
+parser.addArgument(['-n', '--no-check'], {
+    action: 'storeTrue',
+    defaultValue: false,
+    dest: 'noCheck',
+    help: 'Do not check for unauthorized certificates.',
 })
 
 parser.addArgument(['-k', '--keep-open'], {
@@ -61,12 +69,15 @@ parser.addArgument(['address'], {
 const args = parser.parseArgs() as ICLIOptions
 
 const headers: any = {}
-args.header.forEach( (txt) => {
-console.log('header', txt)
-    // const [ name, value ] = txt.split(/\s*:\s*/, txt)
-    // headers[name] = value
-} )
-console.log("headers", headers);
+if (args.header) {
+    args.header.forEach( (txt) => {
+        const match = txt.match(/(.+?)\s*:\s*(.+)/)
+
+        if (match) {
+            headers[ match[1] ] = match[2]
+        }
+    } )
+}
 
 const options: any = {
     binary: args.binary,
@@ -76,6 +87,7 @@ const options: any = {
     outputStream: process.stdout,
     perMessageDeflate: args.deflate,
     protocol: args.subProto,
+    rejectUnauthorized: !args.noCheck,
 }
 
 if (args.address) {

@@ -30,6 +30,7 @@ export interface IOptions {
 export interface IConnectOptions extends IOptions {
     address: string
     headers: { [key: string]: string; }
+    rejectUnauthorized: boolean
 }
 
 export interface IListenOptions extends IOptions {
