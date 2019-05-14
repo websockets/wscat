@@ -18,7 +18,7 @@ Usage
 
 ```
 $ wscat -h
-usage: wscat [-h] [-v] [-l PORT] [-b] [-k] [-d] [-s SUBP] [address]
+usage: wscat [-h] [-v] [-l PORT] [-b] [-H HEADER] [-n] [-k] [-d] [-s SUBP] [address]
 
 Positional arguments:
   address
@@ -29,11 +29,14 @@ Optional arguments:
   -l PORT, --listen PORT
                         Start a websocket server on PORT.
   -b, --binary          Use binary WebSockets.
+  -H HEADER, --header HEADER
+                        Specify a custom HTTP request header. May be given
+                        multiple times.
+  -n, --no-check        Do not check for unauthorized certificates.
   -k, --keep-open       Do not close the socket after EOF.
   -d, --deflate         Use per-message deflate.
   -s SUBP, --subprotocol SUBP
                         WebSocket subprotocol
-
 ```
 
 
