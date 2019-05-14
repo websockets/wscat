@@ -60,7 +60,7 @@ function setup(options: IOptions, socket: WebSocket) {
 }
 
 export function connect(options: IConnectOptions) {
-    const socket = new WebSocket(options.address, undefined, options)
+    const socket = new WebSocket(options.address, options)
     setup(options, socket)
 }
 
