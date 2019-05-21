@@ -7,6 +7,7 @@ import * as wscat from './wscat'
 interface ICLIOptions {
     address?: string
     binary: boolean
+    useRaw: boolean
     deflate: boolean
     keepOpen: boolean
     listen?: number
@@ -27,6 +28,13 @@ parser.addArgument(['-b', '--binary'], {
     action: 'storeTrue',
     defaultValue: false,
     help: 'Use binary WebSockets.',
+})
+
+parser.addArgument(['-r', '--raw'], {
+    action: 'storeTrue',
+    defaultValue: false,
+    dest: 'useRaw',
+    help: 'Use rawmode stdin.',
 })
 
 parser.addArgument(['-H', '--header'], {
@@ -88,6 +96,7 @@ const options: any = {
     perMessageDeflate: args.deflate,
     protocol: args.subProto,
     rejectUnauthorized: !args.noCheck,
+    useRaw: args.useRaw,
 }
 
 if (args.address) {

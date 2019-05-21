@@ -21,6 +21,7 @@ import {WebSocketStream} from './stream'
 export interface IOptions {
     binary: boolean
     inputStream: NodeJS.ReadableStream
+    useRaw: boolean
     keepOpen: boolean
     outputStream: NodeJS.WritableStream
     perMessageDeflate: boolean
@@ -47,9 +48,18 @@ function setup(options: IOptions, socket: WebSocket) {
         options.inputStream.pipe(stream)
     }
 
+    if (options.inputStream === process.stdin && process.stdin.isTTY) {
+        if (options.useRaw) {
+            (process.stdin as any).setRawMode(true)
+        }
+    }
+
     stream.on('close', () => {
         if (options.inputStream === process.stdin && process.stdin.isTTY) {
-           process.exit()
+            if (options.useRaw) {
+                (process.stdin as any).setRawMode(false)
+            }
+            process.exit()
         }
     })
     stream.on('finish', () => {
