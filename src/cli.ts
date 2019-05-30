@@ -7,6 +7,7 @@ import * as wscat from './wscat'
 interface ICLIOptions {
     address?: string
     binary: boolean
+    reportClose: boolean
     useRaw: boolean
     deflate: boolean
     keepOpen: boolean
@@ -28,6 +29,13 @@ parser.addArgument(['-b', '--binary'], {
     action: 'storeTrue',
     defaultValue: false,
     help: 'Use binary WebSockets.',
+})
+
+parser.addArgument(['-c', '--report-close'], {
+    action: 'storeTrue',
+    defaultValue: false,
+    dest: 'reportClose',
+    help: 'Write WebSocket $close:$reason to STDERR on close.',
 })
 
 parser.addArgument(['-r', '--raw'], {
@@ -96,6 +104,7 @@ const options: any = {
     perMessageDeflate: args.deflate,
     protocol: args.subProto,
     rejectUnauthorized: !args.noCheck,
+    reportClose: args.reportClose,
     useRaw: args.useRaw,
 }
 

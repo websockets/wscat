@@ -18,9 +18,9 @@ export class WebSocketStream extends Duplex {
         socket.on('error', (error: Error) => {
             this.emit('error', error)
         })
-        socket.on('close', () => {
+        socket.on('close', (code, reason) => {
             this.push(null)
-            this.emit('close')
+            this.emit('close', code, reason)
         })
     }
 

@@ -21,6 +21,7 @@ import {WebSocketStream} from './stream'
 export interface IOptions {
     binary: boolean
     inputStream: NodeJS.ReadableStream
+    reportClose: boolean
     useRaw: boolean
     keepOpen: boolean
     outputStream: NodeJS.WritableStream
@@ -54,7 +55,11 @@ function setup(options: IOptions, socket: WebSocket) {
         }
     }
 
-    stream.on('close', () => {
+    stream.on('close', (code: number, reason: string) => {
+        if (options.reportClose) {
+            process.stdout.write(`${code}:${reason}\n`)
+        }
+
         if (options.inputStream === process.stdin && process.stdin.isTTY) {
             if (options.useRaw) {
                 (process.stdin as any).setRawMode(false)
@@ -62,7 +67,7 @@ function setup(options: IOptions, socket: WebSocket) {
             process.exit()
         }
     })
-    stream.on('finish', () => {
+    stream.on('finish', (e) => {
         if (!options.keepOpen && stream.hasWritten) {
             socket.close()
         }
