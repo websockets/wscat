@@ -8,6 +8,7 @@ interface ICLIOptions {
     address?: string
     binary: boolean
     reportClose: boolean
+    sendResize: string
     useRaw: boolean
     deflate: boolean
     keepOpen: boolean
@@ -36,6 +37,13 @@ parser.addArgument(['-c', '--report-close'], {
     defaultValue: false,
     dest: 'reportClose',
     help: 'Write WebSocket $close:$reason to STDERR on close.',
+})
+
+parser.addArgument(['-R', '--send-resize'], {
+    dest: 'sendResize',
+    help: 'Send text frame when client terminal resizes, using template string containing ${columns} and ${rows}.',
+    metavar: 'SENDRESIZE',
+    type: String,
 })
 
 parser.addArgument(['-r', '--raw'], {
@@ -105,6 +113,7 @@ const options: any = {
     protocol: args.subProto,
     rejectUnauthorized: !args.noCheck,
     reportClose: args.reportClose,
+    sendResize: args.sendResize,
     useRaw: args.useRaw,
 }
 

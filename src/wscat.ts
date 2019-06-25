@@ -15,6 +15,7 @@
 
 */
 
+import {ReadStream as TtyReadStream, WriteStream as TtyWriteStream} from 'tty'
 import * as WebSocket from 'ws'
 import {WebSocketStream} from './stream'
 
@@ -22,6 +23,7 @@ export interface IOptions {
     binary: boolean
     inputStream: NodeJS.ReadableStream
     reportClose: boolean
+    sendResize: string
     useRaw: boolean
     keepOpen: boolean
     outputStream: NodeJS.WritableStream
@@ -49,10 +51,23 @@ function setup(options: IOptions, socket: WebSocket) {
         options.inputStream.pipe(stream)
     }
 
-    if (options.inputStream === process.stdin && process.stdin.isTTY) {
-        if (options.useRaw) {
-            (process.stdin as any).setRawMode(true)
+    if (options.useRaw && options.inputStream === process.stdin && process.stdin.isTTY) {
+        const stdin = process.stdin as TtyReadStream
+        stdin.setRawMode(true)
+    }
+
+    if (options.sendResize && options.outputStream === process.stdout && process.stdout.isTTY) {
+        const stdout = process.stdout as TtyWriteStream
+        const sendResize = () => {
+            if (socket.readyState === WebSocket.OPEN && stream.writable) {
+                stream.write(
+                    options.sendResize
+                        .replace('${columns}', String(stdout.columns))
+                        .replace('${rows}', String(stdout.rows)))
+            }
         }
+        stdout.on('resize', sendResize)
+        socket.on('open', sendResize)
     }
 
     stream.on('close', (code: number, reason: string) => {
@@ -62,7 +77,8 @@ function setup(options: IOptions, socket: WebSocket) {
 
         if (options.inputStream === process.stdin && process.stdin.isTTY) {
             if (options.useRaw) {
-                (process.stdin as any).setRawMode(false)
+                const stdin = process.stdin as TtyReadStream
+                stdin.setRawMode(false)
             }
             process.exit()
         }
