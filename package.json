@@ -25,13 +25,13 @@
   ],
   "dependencies": {
     "argparse": "^1.0.9",
-    "ws": "^7.0.0"
+    "ws": "^7.0.1"
   },
   "devDependencies": {
     "@types/argparse": "^1.0.36",
     "@types/ws": "^6.0.1",
-    "ts-node": "^8.1.0",
-    "tslint": "^5.16.0",
-    "typescript": "^3.4.5"
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.2"
   }
 }
