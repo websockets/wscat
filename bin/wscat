@@ -13,6 +13,7 @@ const read = require('read');
 const readline = require('readline');
 const tty = require('tty');
 const WebSocket = require('ws');
+const HttpsProxyAgent = require('https-proxy-agent');
 
 /**
  * InputReader - processes console input.
@@ -145,6 +146,9 @@ program
     'Enable slash commands for control frames ' +
       '(/ping, /pong, /close [code [, reason]])'
   )
+  .option(
+    '--proxy <[protocol://]host[:port]>',
+    'Use proxy on given port (--connect only).')
   .parse(process.argv);
 
 if (program.listen && program.connect) {
@@ -238,6 +242,11 @@ if (program.listen) {
     if (program.ca) options.ca = fs.readFileSync(program.ca);
     if (program.cert) options.cert = fs.readFileSync(program.cert);
     if (program.key) options.key = fs.readFileSync(program.key);
+
+    if (program.proxy) {
+      var agent = new HttpsProxyAgent(program.proxy);
+      options.agent = agent
+    }
 
     let connectUrl = program.connect;
     if (!connectUrl.match(/\w+:\/\/.*$/i)) {
