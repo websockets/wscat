@@ -148,7 +148,9 @@ program
   )
   .option(
     '--proxy <[protocol://]host[:port]>',
-    'Use proxy on given port (--connect only).')
+    'Use proxy on given port (--connect only). ' +
+    'Proxy must support CONNECT method.'
+  )
   .parse(process.argv);
 
 if (program.listen && program.connect) {
