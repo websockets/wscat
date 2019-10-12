@@ -18,10 +18,10 @@
   "author": "Arnout Kazemier, Einar Otto Stangvik",
   "license": "MIT",
   "dependencies": {
-    "commander": "~3.0.0",
+    "commander": "^3.0.2",
     "https-proxy-agent": "^3.0.0",
-    "read": "~1.0.7",
-    "ws": "~7.1.0"
+    "read": "^1.0.7",
+    "ws": "^7.1.2"
   },
   "bin": {
     "wscat": "./bin/wscat"
