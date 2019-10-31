@@ -23,6 +23,7 @@ Options:
   -o, --origin <origin>               optional origin
   -x, --execute <command>             execute command after connecting
   -w, --wait <seconds>                wait given seconds after executing command
+  -r, --print-reason                  print reason string when the connection closes
   --host <host>                       optional host
   -s, --subprotocol <protocol>        optional subprotocol (default: [])
   -n, --no-check                      do not check for unauthorized certificates

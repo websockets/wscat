@@ -93,6 +93,23 @@ class Console extends EventEmitter {
   resume() {
     this.stdin.removeListener('keypress', this._resetInput);
   }
+
+  // helper print function, not core to Console features
+  printClose(code, reason) {
+    if (reason && program.printReason) {
+      this.print(
+        Console.Types.Control,
+        `Disconnected (code: ${code}, reason: ${reason})`,
+        Console.Colors.Green
+      );
+    } else {
+      this.print(
+        Console.Types.Control,
+        `Disconnected (code: ${code})`,
+        Console.Colors.Green
+      );
+    }
+  }
 }
 
 function collect(val, memo) {
@@ -101,6 +118,7 @@ function collect(val, memo) {
 }
 
 function noop() {}
+
 
 /**
  * The actual application
@@ -116,6 +134,7 @@ program
   .option('-o, --origin <origin>', 'optional origin')
   .option('-x, --execute <command>', 'execute command after connecting')
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
+  .option('-r, --print-reason', 'print reason string when the connection closes')
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'do not check for unauthorized certificates')
@@ -195,12 +214,8 @@ if (program.listen) {
       Console.Colors.Green
     );
 
-    ws.on('close', (code) => {
-      wsConsole.print(
-        Console.Types.Control,
-        `Disconnected (code: ${code})`,
-        Console.Colors.Green
-      );
+    ws.on('close', (code, reason) => {
+      wsConsole.printClose(code, reason)
       wsConsole.clear();
       wsConsole.pause();
       ws = null;
@@ -314,13 +329,9 @@ if (program.listen) {
       }
     });
 
-    ws.on('close', (code) => {
+    ws.on('close', (code, reason) => {
       if (!program.execute) {
-        wsConsole.print(
-          Console.Types.Control,
-          `Disconnected (code: ${code})`,
-          Console.Colors.Green
-        );
+        wsConsole.printClose(code, reason);
       }
       wsConsole.clear();
       process.exit();
