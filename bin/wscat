@@ -96,7 +96,7 @@ class Console extends EventEmitter {
 
   // helper print function, not core to Console features
   printClose(code, reason) {
-    if (reason && program.printReason) {
+    if (reason) {
       this.print(
         Console.Types.Control,
         `Disconnected (code: ${code}, reason: ${reason})`,
@@ -134,7 +134,6 @@ program
   .option('-o, --origin <origin>', 'optional origin')
   .option('-x, --execute <command>', 'execute command after connecting')
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
-  .option('-r, --print-reason', 'print reason string when the connection closes')
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'do not check for unauthorized certificates')
