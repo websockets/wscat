@@ -93,23 +93,6 @@ class Console extends EventEmitter {
   resume() {
     this.stdin.removeListener('keypress', this._resetInput);
   }
-
-  // helper print function, not core to Console features
-  printClose(code, reason) {
-    if (reason) {
-      this.print(
-        Console.Types.Control,
-        `Disconnected (code: ${code}, reason: ${reason})`,
-        Console.Colors.Green
-      );
-    } else {
-      this.print(
-        Console.Types.Control,
-        `Disconnected (code: ${code})`,
-        Console.Colors.Green
-      );
-    }
-  }
 }
 
 function collect(val, memo) {
@@ -214,7 +197,11 @@ if (program.listen) {
     );
 
     ws.on('close', (code, reason) => {
-      wsConsole.printClose(code, reason)
+      wsConsole.print(
+        Console.Types.Control,
+        `Disconnected (code: ${code}, reason: "${reason}")`,
+        Console.Colors.Green
+      );
       wsConsole.clear();
       wsConsole.pause();
       ws = null;
@@ -330,7 +317,11 @@ if (program.listen) {
 
     ws.on('close', (code, reason) => {
       if (!program.execute) {
-        wsConsole.printClose(code, reason);
+        wsConsole.print(
+          Console.Types.Control,
+          `Disconnected (code: ${code}, reason: "${reason}")`,
+          Console.Colors.Green
+        );
       }
       wsConsole.clear();
       process.exit();
