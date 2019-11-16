@@ -116,7 +116,7 @@ program
   .option('-o, --origin <origin>', 'optional origin')
   .option('-x, --execute <command>', 'execute command after connecting')
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
-  .option('-P, --hide-ping', 'hide internal ping/pong messages')
+  .option('-P, --show-ping', 'print internal ping/pong messages')
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'do not check for unauthorized certificates')
@@ -337,7 +337,7 @@ if (program.listen) {
     });
 
     ws.on('ping', () => {
-      if (!program.hidePing) {
+      if (program.showPing) {
         wsConsole.print(
           Console.Types.Incoming,
           'Received ping',
@@ -347,7 +347,7 @@ if (program.listen) {
     });
 
     ws.on('pong', () => {
-      if (!program.hidePing) {
+      if (program.showPing) {
         wsConsole.print(
           Console.Types.Incoming,
           'Received pong',
