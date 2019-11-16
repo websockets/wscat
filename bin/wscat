@@ -102,7 +102,6 @@ function collect(val, memo) {
 
 function noop() {}
 
-
 /**
  * The actual application
  */
@@ -118,7 +117,7 @@ program
   .option('-x, --execute <command>', 'execute command after connecting')
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
   .option(
-    '-P, --show-ping',
+    '-P, --show-ping-pong',
     'print a notification when a ping or pong is received'
   )
   .option('--host <host>', 'optional host')
@@ -341,7 +340,7 @@ if (program.listen) {
     });
 
     ws.on('ping', () => {
-      if (program.showPing) {
+      if (program.showPingPong) {
         wsConsole.print(
           Console.Types.Incoming,
           'Received ping',
@@ -351,7 +350,7 @@ if (program.listen) {
     });
 
     ws.on('pong', () => {
-      if (program.showPing) {
+      if (program.showPingPong) {
         wsConsole.print(
           Console.Types.Incoming,
           'Received pong',
