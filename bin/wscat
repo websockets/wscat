@@ -102,6 +102,7 @@ function collect(val, memo) {
 
 function noop() {}
 
+
 /**
  * The actual application
  */
@@ -195,10 +196,10 @@ if (program.listen) {
       Console.Colors.Green
     );
 
-    ws.on('close', (code) => {
+    ws.on('close', (code, reason) => {
       wsConsole.print(
         Console.Types.Control,
-        `Disconnected (code: ${code})`,
+        `Disconnected (code: ${code}, reason: "${reason}")`,
         Console.Colors.Green
       );
       wsConsole.clear();
@@ -314,11 +315,11 @@ if (program.listen) {
       }
     });
 
-    ws.on('close', (code) => {
+    ws.on('close', (code, reason) => {
       if (!program.execute) {
         wsConsole.print(
           Console.Types.Control,
-          `Disconnected (code: ${code})`,
+          `Disconnected (code: ${code}, reason: "${reason}")`,
           Console.Colors.Green
         );
       }
