@@ -117,6 +117,10 @@ program
   .option('-o, --origin <origin>', 'optional origin')
   .option('-x, --execute <command>', 'execute command after connecting')
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
+  .option(
+    '-P, --show-ping',
+    'print a notification when a ping or pong is received'
+  )
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'do not check for unauthorized certificates')
@@ -337,19 +341,23 @@ if (program.listen) {
     });
 
     ws.on('ping', () => {
-      wsConsole.print(
-        Console.Types.Incoming,
-        'Received ping',
-        Console.Colors.Blue
-      );
+      if (program.showPing) {
+        wsConsole.print(
+          Console.Types.Incoming,
+          'Received ping',
+          Console.Colors.Blue
+        );
+      }
     });
 
     ws.on('pong', () => {
-      wsConsole.print(
-        Console.Types.Incoming,
-        'Received pong',
-        Console.Colors.Blue
-      );
+      if (program.showPing) {
+        wsConsole.print(
+          Console.Types.Incoming,
+          'Received pong',
+          Console.Colors.Blue
+        );
+      }
     });
 
     wsConsole.on('close', () => {
