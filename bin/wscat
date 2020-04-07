@@ -265,8 +265,9 @@ if (program.listen) {
     options.headers = headers;
     const ws = new WebSocket(connectUrl, program.subprotocol, options);
 
+    let pingInterval;
+
     ws.on('open', () => {
-      let pingInterval;
       if (program.pingInterval) {
         pingInterval = setInterval(() => {
           ws.ping(noop);
