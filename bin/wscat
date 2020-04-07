@@ -120,6 +120,10 @@ program
     '-P, --show-ping-pong',
     'print a notification when a ping or pong is received'
   )
+  .option(
+    '--ping-interval <interval_ms>',
+    'Send a ping command automatically after each interval'
+  )
   .option('--host <host>', 'optional host')
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
   .option('-n, --no-check', 'do not check for unauthorized certificates')
@@ -262,6 +266,13 @@ if (program.listen) {
     const ws = new WebSocket(connectUrl, program.subprotocol, options);
 
     ws.on('open', () => {
+      let pingInterval;
+      if (program.pingInterval) {
+        pingInterval = setInterval(() => {
+          ws.ping(noop);
+        }, program.pingInterval)
+      }
+
       if (program.execute) {
         ws.send(program.execute);
         setTimeout(
@@ -319,6 +330,7 @@ if (program.listen) {
     });
 
     ws.on('close', (code, reason) => {
+      clearInterval(pingInterval);
       if (!program.execute) {
         wsConsole.print(
           Console.Types.Control,
