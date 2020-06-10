@@ -61,7 +61,7 @@ class Console extends EventEmitter {
   }
 
   prompt() {
-    this.readlineInterface.prompt();
+    this.readlineInterface.prompt(true);
   }
 
   print(type, msg, color) {
@@ -82,7 +82,7 @@ class Console extends EventEmitter {
 
   clear() {
     if (tty.isatty(1)) {
-      this.stdout.write('\u001b[2K\u001b[3D');
+      this.stdout.write('\r\u001b[2K\u001b[3D');
     }
   }
 
