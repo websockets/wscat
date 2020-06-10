@@ -61,7 +61,7 @@ class Console extends EventEmitter {
   }
 
   prompt() {
-    this.readlineInterface.prompt();
+    this.readlineInterface.prompt(true);
   }
 
   print(type, msg, color) {
