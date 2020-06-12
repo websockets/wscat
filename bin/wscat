@@ -145,6 +145,7 @@ program
       "If you don't provide a value, it will be prompted for"
   )
   .option('--no-color', 'run without color')
+  .option('--pretty', 'attempt to pretty print responses using JSON.stringify.')
   .option(
     '--slash',
     'enable slash commands for control frames (/ping, /pong, /close ' +
@@ -334,9 +335,21 @@ if (program.listen) {
       wsConsole.print(Console.Types.Error, err.message, Console.Colors.Yellow);
       process.exit(-1);
     });
-
+    
     ws.on('message', (data) => {
-      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+      let s = data;
+      if (program.pretty) {
+        try {
+          s = JSON.stringify(JSON.parse(data), null, 4);
+        } catch(e) {
+          s = data;
+        }
+      }
+      wsConsole.print(Console.Types.Incoming, s, Console.Colors.Blue);
+    }).on('ping', function ping() {
+      wsConsole.print(Console.Types.Incoming, 'Received ping', Console.Colors.Blue);
+    }).on('pong', function pong() {
+      wsConsole.print(Console.Types.Incoming, 'Received pong', Console.Colors.Blue);
     });
 
     ws.on('ping', () => {
