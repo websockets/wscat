@@ -76,7 +76,7 @@ class Console extends EventEmitter {
     } else if (type === Console.Types.Incoming) {
       this.stdout.write(msg + '\n');
     } else {
-      // is a control message and we're not in a tty... drop it.
+      this.stdout.write(type + msg + '\n');
     }
   }
 
