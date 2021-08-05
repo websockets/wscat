@@ -26,6 +26,7 @@ class Console extends EventEmitter {
 
     this.stdin = process.stdin;
     this.stdout = process.stdout;
+    this.stderr = process.stderr;
 
     this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
 
@@ -75,6 +76,8 @@ class Console extends EventEmitter {
       this.prompt();
     } else if (type === Console.Types.Incoming) {
       this.stdout.write(msg + '\n');
+    } else if (type === Console.Types.Error) {
+      this.stderr.write(type + msg + '\n');
     } else {
       // is a control message and we're not in a tty... drop it.
     }
