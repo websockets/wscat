@@ -1,11 +1,5 @@
 #!/usr/bin/env node
 
-/*!
- * ws: a node.js websocket client
- * Copyright(c) 2011 Einar Otto Stangvik <einaros@gmail.com>
- * MIT Licensed
- */
-
 const EventEmitter = require('events');
 const fs = require('fs');
 const HttpsProxyAgent = require('https-proxy-agent');
