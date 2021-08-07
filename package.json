@@ -21,7 +21,7 @@
     "commander": "^8.1.0",
     "https-proxy-agent": "^5.0.0",
     "read": "^1.0.7",
-    "ws": "^7.1.2"
+    "ws": "^8.0.0"
   },
   "bin": {
     "wscat": "./bin/wscat"
