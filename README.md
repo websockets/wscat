@@ -52,4 +52,4 @@ Connected (press CTRL+C to quit)
 
 ## License
 
-MIT
+[MIT](LICENSE)
