@@ -69,8 +69,8 @@ class Console extends EventEmitter {
     if (tty.isatty(1)) {
       this.clear();
 
-      if (program.execute) color = type = '';
-      else if (!program.color) color = '';
+      if (programOptions.execute) color = type = '';
+      else if (!programOptions.color) color = '';
 
       this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
       this.prompt();
@@ -159,20 +159,22 @@ program
   )
   .parse(process.argv);
 
-if (program.listen && program.connect) {
+const programOptions = program.opts();
+
+if (programOptions.listen && programOptions.connect) {
   console.error('\u001b[33merror: Use either --listen or --connect\u001b[39m');
   process.exit(-1);
 }
 
-if (program.listen) {
+if (programOptions.listen) {
   const wsConsole = new Console();
   wsConsole.pause();
 
   let ws = null;
-  const wss = new WebSocket.Server({ port: program.listen }, () => {
+  const wss = new WebSocket.Server({ port: programOptions.listen }, () => {
     wsConsole.print(
       Console.Types.Control,
-      `Listening on port ${program.listen} (press CTRL+C to quit)`,
+      `Listening on port ${programOptions.listen} (press CTRL+C to quit)`,
       Console.Colors.Green
     );
     wsConsole.clear();
@@ -226,12 +228,12 @@ if (program.listen) {
     wsConsole.print(Console.Types.Error, err.message, Console.Colors.Yellow);
     process.exit(-1);
   });
-} else if (program.connect) {
+} else if (programOptions.connect) {
   const options = {};
   const cont = () => {
     const wsConsole = new Console();
 
-    const headers = program.header.reduce((acc, cur) => {
+    const headers = programOptions.header.reduce((acc, cur) => {
       const i = cur.indexOf(':');
       const key = cur.slice(0, i);
       const value = cur.slice(i + 1);
@@ -239,39 +241,42 @@ if (program.listen) {
       return acc;
     }, {});
 
-    if (program.auth) {
+    if (programOptions.auth) {
       headers.Authorization =
-        'Basic ' + Buffer.from(program.auth).toString('base64');
+        'Basic ' + Buffer.from(programOptions.auth).toString('base64');
     }
-    if (program.host) headers.Host = program.host;
-    if (program.protocol) options.protocolVersion = +program.protocol;
-    if (program.origin) options.origin = program.origin;
-    if (!program.check) options.rejectUnauthorized = program.check;
-    if (program.ca) options.ca = fs.readFileSync(program.ca);
-    if (program.cert) options.cert = fs.readFileSync(program.cert);
-    if (program.key) options.key = fs.readFileSync(program.key);
+    if (programOptions.host) headers.Host = programOptions.host;
+    if (programOptions.protocol)
+      options.protocolVersion = +programOptions.protocol;
+    if (programOptions.origin) options.origin = programOptions.origin;
+    if (!programOptions.check)
+      options.rejectUnauthorized = programOptions.check;
+    if (programOptions.ca) options.ca = fs.readFileSync(programOptions.ca);
+    if (programOptions.cert)
+      options.cert = fs.readFileSync(programOptions.cert);
+    if (programOptions.key) options.key = fs.readFileSync(programOptions.key);
 
-    if (program.proxy) {
-      var agent = new HttpsProxyAgent(program.proxy);
+    if (programOptions.proxy) {
+      var agent = new HttpsProxyAgent(programOptions.proxy);
       options.agent = agent;
     }
 
-    let connectUrl = program.connect;
+    let connectUrl = programOptions.connect;
     if (!connectUrl.match(/\w+:\/\/.*$/i)) {
       connectUrl = `ws://${connectUrl}`;
     }
 
     options.headers = headers;
-    const ws = new WebSocket(connectUrl, program.subprotocol, options);
+    const ws = new WebSocket(connectUrl, programOptions.subprotocol, options);
 
     ws.on('open', () => {
-      if (program.execute) {
-        ws.send(program.execute);
+      if (programOptions.execute) {
+        ws.send(programOptions.execute);
         setTimeout(
           () => {
             ws.close();
           },
-          program.wait ? program.wait * 1000 : 2000
+          programOptions.wait ? programOptions.wait * 1000 : 2000
         );
       } else {
         wsConsole.print(
@@ -281,7 +286,7 @@ if (program.listen) {
         );
 
         wsConsole.on('line', (data) => {
-          if (program.slash && data[0] === '/') {
+          if (programOptions.slash && data[0] === '/') {
             const toks = data.split(/\s+/);
             switch (toks[0].substr(1)) {
               case 'ping':
@@ -322,7 +327,7 @@ if (program.listen) {
     });
 
     ws.on('close', (code, reason) => {
-      if (!program.execute) {
+      if (!programOptions.execute) {
         wsConsole.print(
           Console.Types.Control,
           `Disconnected (code: ${code}, reason: "${reason}")`,
@@ -343,7 +348,7 @@ if (program.listen) {
     });
 
     ws.on('ping', () => {
-      if (program.showPingPong) {
+      if (programOptions.showPingPong) {
         wsConsole.print(
           Console.Types.Incoming,
           'Received ping',
@@ -353,7 +358,7 @@ if (program.listen) {
     });
 
     ws.on('pong', () => {
-      if (program.showPingPong) {
+      if (programOptions.showPingPong) {
         wsConsole.print(
           Console.Types.Incoming,
           'Received pong',
@@ -368,7 +373,7 @@ if (program.listen) {
     });
   };
 
-  if (program.passphrase === true) {
+  if (programOptions.passphrase === true) {
     read(
       {
         prompt: 'Passphrase: ',
@@ -380,8 +385,8 @@ if (program.listen) {
         cont();
       }
     );
-  } else if (typeof program.passphrase === 'string') {
-    options.passphrase = program.passphrase;
+  } else if (typeof programOptions.passphrase === 'string') {
+    options.passphrase = programOptions.passphrase;
     cont();
   } else {
     cont();
