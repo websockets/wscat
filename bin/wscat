@@ -109,50 +109,50 @@ const version = require('../package.json').version;
 program
   .version(version)
   .usage('[options] (--listen <port> | --connect <url>)')
-  .option('-l, --listen <port>', 'listen on port')
-  .option('-c, --connect <url>', 'connect to a WebSocket server')
-  .option('-p, --protocol <version>', 'optional protocol version')
-  .option('-o, --origin <origin>', 'optional origin')
-  .option('-x, --execute <command>', 'execute command after connecting')
-  .option('-w, --wait <seconds>', 'wait given seconds after executing command')
-  .option(
-    '-P, --show-ping-pong',
-    'print a notification when a ping or pong is received'
-  )
-  .option('--host <host>', 'optional host')
-  .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
-  .option('-n, --no-check', 'do not check for unauthorized certificates')
-  .option(
-    '-H, --header <header:value>',
-    'set an HTTP header. Repeat to set multiple (--connect only)',
-    collect,
-    []
-  )
   .option(
     '--auth <username:password>',
     'add basic HTTP authentication header (--connect only)'
   )
   .option('--ca <ca>', 'specify a Certificate Authority (--connect only)')
   .option('--cert <cert>', 'specify a Client SSL Certificate (--connect only)')
+  .option('--host <host>', 'optional host')
   .option(
     '--key <key>',
     "specify a Client SSL Certificate's key (--connect only)"
   )
+  .option('--no-color', 'run without color')
   .option(
     '--passphrase [passphrase]',
     "specify a Client SSL Certificate Key's passphrase (--connect only). " +
       "If you don't provide a value, it will be prompted for"
   )
-  .option('--no-color', 'run without color')
+  .option(
+    '--proxy <[protocol://]host[:port]>',
+    'connect via a proxy. Proxy must support CONNECT method'
+  )
   .option(
     '--slash',
     'enable slash commands for control frames (/ping, /pong, /close ' +
       '[code [, reason]])'
   )
+  .option('-c, --connect <url>', 'connect to a WebSocket server')
   .option(
-    '--proxy <[protocol://]host[:port]>',
-    'connect via a proxy. Proxy must support CONNECT method'
+    '-H, --header <header:value>',
+    'set an HTTP header. Repeat to set multiple (--connect only)',
+    collect,
+    []
   )
+  .option('-l, --listen <port>', 'listen on port')
+  .option('-n, --no-check', 'do not check for unauthorized certificates')
+  .option('-o, --origin <origin>', 'optional origin')
+  .option('-p, --protocol <version>', 'optional protocol version')
+  .option(
+    '-P, --show-ping-pong',
+    'print a notification when a ping or pong is received'
+  )
+  .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
+  .option('-w, --wait <seconds>', 'wait given seconds after executing command')
+  .option('-x, --execute <command>', 'execute command after connecting')
   .parse(process.argv);
 
 const programOptions = program.opts();
