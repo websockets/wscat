@@ -120,6 +120,12 @@ program
     '--key <key>',
     "specify a Client SSL Certificate's key (--connect only)"
   )
+  .option(
+    '--max-redirects [num]',
+    'maximum number of redirects allowed (--connect only)',
+    parseInt,
+    10
+  )
   .option('--no-color', 'run without color')
   .option(
     '--passphrase [passphrase]',
@@ -142,6 +148,7 @@ program
     collect,
     []
   )
+  .option('-L, --location', 'follow redirects (--connect only)')
   .option('-l, --listen <port>', 'listen on port')
   .option('-n, --no-check', 'do not check for unauthorized certificates')
   .option('-o, --origin <origin>', 'optional origin')
@@ -251,18 +258,18 @@ if (programOptions.listen) {
     if (programOptions.cert)
       options.cert = fs.readFileSync(programOptions.cert);
     if (programOptions.key) options.key = fs.readFileSync(programOptions.key);
+    if (programOptions.proxy)
+      options.agent = new HttpsProxyAgent(programOptions.proxy);
+    if (programOptions.location) options.followRedirects = true;
 
-    if (programOptions.proxy) {
-      var agent = new HttpsProxyAgent(programOptions.proxy);
-      options.agent = agent;
-    }
+    options.maxRedirects = programOptions.maxRedirects;
+    options.headers = headers;
 
     let connectUrl = programOptions.connect;
     if (!connectUrl.match(/\w+:\/\/.*$/i)) {
       connectUrl = `ws://${connectUrl}`;
     }
 
-    options.headers = headers;
     const ws = new WebSocket(connectUrl, programOptions.subprotocol, options);
 
     ws.on('open', () => {

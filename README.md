@@ -22,6 +22,7 @@ Options:
   --cert <cert>                       specify a Client SSL Certificate (--connect only)
   --host <host>                       optional host
   --key <key>                         specify a Client SSL Certificate's key (--connect only)
+  --max-redirects [num]               maximum number of redirects allowed (--connect only) (default: 10)
   --no-color                          run without color
   --passphrase [passphrase]           specify a Client SSL Certificate Key's passphrase (--connect only). If you don't
                                       provide a value, it will be prompted for
@@ -29,6 +30,7 @@ Options:
   --slash                             enable slash commands for control frames (/ping, /pong, /close [code [, reason]])
   -c, --connect <url>                 connect to a WebSocket server
   -H, --header <header:value>         set an HTTP header. Repeat to set multiple (--connect only) (default: [])
+  -L, --location                      follow redirects (--connect only)
   -l, --listen <port>                 listen on port
   -n, --no-check                      do not check for unauthorized certificates
   -o, --origin <origin>               optional origin
