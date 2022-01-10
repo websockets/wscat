@@ -45,7 +45,7 @@ Options:
 ## Example
 
 ```
-$ wscat -c ws://echo.websocket.org
+$ wscat -c ws://websocket-echo.com
 Connected (press CTRL+C to quit)
 > hi there
 < hi there
