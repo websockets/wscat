@@ -27,7 +27,7 @@ Options:
   --passphrase [passphrase]           specify a Client SSL Certificate Key's passphrase (--connect only). If you don't
                                       provide a value, it will be prompted for
   --proxy <[protocol://]host[:port]>  connect via a proxy. Proxy must support CONNECT method
-  --slash                             enable slash commands for control frames (/ping, /pong, /close [code [, reason]])
+  --slash                             enable slash commands for control frames (/ping [data], /pong [data], /close [code [, reason]])
   -c, --connect <url>                 connect to a WebSocket server
   -H, --header <header:value>         set an HTTP header. Repeat to set multiple (--connect only) (default: [])
   -L, --location                      follow redirects (--connect only)
