@@ -138,8 +138,8 @@ program
   )
   .option(
     '--slash',
-    'enable slash commands for control frames (/ping, /pong, /close ' +
-      '[code [, reason]])'
+    'enable slash commands for control frames (/ping [data], /pong [data], ' +
+      '/close [code [, reason]])'
   )
   .option('-c, --connect <url>', 'connect to a WebSocket server')
   .option(
@@ -292,11 +292,19 @@ if (programOptions.listen) {
           if (programOptions.slash && data[0] === '/') {
             const toks = data.split(/\s+/);
             switch (toks[0].substr(1)) {
-              case 'ping':
-                ws.ping(noop);
+            case 'ping':
+                if (toks.length >= 2) {
+                    ws.ping(toks[1]);
+                } else {
+                    ws.ping(noop);
+                }
                 break;
-              case 'pong':
-                ws.pong(noop);
+            case 'pong':
+                if (toks.length >= 2) {
+                    ws.pong(toks[1]);
+                } else {
+                    ws.pong(noop);
+                }
                 break;
               case 'close': {
                 let closeStatusCode = 1000;
@@ -350,21 +358,21 @@ if (programOptions.listen) {
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
 
-    ws.on('ping', () => {
+    ws.on('ping', (data) => {
       if (programOptions.showPingPong) {
         wsConsole.print(
           Console.Types.Incoming,
-          'Received ping',
+          `Received ping (data: "${data}"`,
           Console.Colors.Blue
         );
       }
     });
 
-    ws.on('pong', () => {
+    ws.on('pong', (data) => {
       if (programOptions.showPingPong) {
         wsConsole.print(
           Console.Types.Incoming,
-          'Received pong',
+          `Received pong (data: "${data}")`,
           Console.Colors.Blue
         );
       }
