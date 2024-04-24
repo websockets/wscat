@@ -362,7 +362,7 @@ if (programOptions.listen) {
       if (programOptions.showPingPong) {
         wsConsole.print(
           Console.Types.Incoming,
-          `Received ping (data: "${data}"`,
+          `Received ping (data: "${data}")`,
           Console.Colors.Blue
         );
       }
