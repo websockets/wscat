@@ -158,6 +158,7 @@ program
     'print a notification when a ping or pong is received'
   )
   .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
+  .option('-t, --tick <message>', 'send a message every 5 seconds')
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
   .option('-x, --execute <command>', 'execute command after connecting')
   .parse(process.argv);
@@ -261,6 +262,9 @@ if (programOptions.listen) {
     if (programOptions.proxy)
       options.agent = new HttpsProxyAgent(programOptions.proxy);
     if (programOptions.location) options.followRedirects = true;
+    if (programOptions.tick) setInterval(function() {
+      ws.send(programOptions.tick);
+    }, 5000);
 
     options.maxRedirects = programOptions.maxRedirects;
     options.headers = headers;

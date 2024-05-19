@@ -38,6 +38,7 @@ Options:
   -p, --protocol <version>            optional protocol version
   -P, --show-ping-pong                print a notification when a ping or pong is received
   -s, --subprotocol <protocol>        optional subprotocol (default: [])
+  -t, --tick <message>                send a message every 5 seconds
   -w, --wait <seconds>                wait given seconds after executing command
   -x, --execute <command>             execute command after connecting
   -h, --help                          display help for command
