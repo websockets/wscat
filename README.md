@@ -32,6 +32,7 @@ Options:
   -c, --connect <url>                 connect to a WebSocket server
   -H, --header <header:value>         set an HTTP header. Repeat to set multiple (--connect only) (default: [])
   -L, --location                      follow redirects (--connect only)
+  -j, --json                          parse multiline JSON
   -l, --listen <port>                 listen on port
   -n, --no-check                      do not check for unauthorized certificates
   -o, --origin <origin>               optional origin
