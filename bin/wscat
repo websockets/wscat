@@ -4,10 +4,10 @@
 
 const EventEmitter = require('events');
 const fs = require('fs');
-const HttpsProxyAgent = require('https-proxy-agent');
 const readline = require('readline');
 const tty = require('tty');
 const WebSocket = require('ws');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const { program } = require('commander');
 const { read } = require('read');
 
