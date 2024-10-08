@@ -101,10 +101,7 @@ class Console extends EventEmitter {
 }
 
 class JsonInputHandler {
-  constructor({
-    ws,
-    wsConsole,
-  }) {
+  constructor(ws, wsConsole) {
     this.ws = ws;
     this.wsConsole = wsConsole;
     this.maxEmptyLines = 2;
@@ -135,10 +132,14 @@ class JsonInputHandler {
   }
 
   recoverFromParseError(error) {
-    if (error.message.match(/Unexpected end of JSON input/i)) {
+    if (/Unexpected end of JSON input/.test(error.message)) {
       this.wsConsole.multilinePrompt();
-    } else if (error.message.match(/Unexpected/)) {
-      this.wsConsole.print(Console.Types.Error, 'Illegal JSON text ', Console.Colors.Yellow );
+    } else if (/Unexpected/.test(error.message)) {
+      this.wsConsole.print(
+        Console.Types.Error,
+        'Illegal JSON text ',
+        Console.Colors.Yellow
+      );
       this.reset();
       this.wsConsole.prompt();
     }
@@ -149,7 +150,7 @@ class JsonInputHandler {
     this.wsConsole.print(
       Console.Types.Control,
       'You typed two empty lines, resetting JSON text.',
-      Console.Colors.Default,
+      Console.Colors.Default
     );
   }
 
@@ -191,10 +192,7 @@ const version = require('../package.json').version;
 program
   .version(version)
   .usage('[options] (--listen <port> | --connect <url>)')
-  .option(
-    '--auth <username:password>',
-    'add basic HTTP authentication header (--connect only)'
-  )
+  .option('--auth <username:password>', 'add basic HTTP authentication header')
   .option('--ca <ca>', 'specify a Certificate Authority (--connect only)')
   .option('--cert <cert>', 'specify a Client SSL Certificate (--connect only)')
   .option('--host <host>', 'optional host')
@@ -204,7 +202,7 @@ program
   )
   .option(
     '--max-redirects [num]',
-    'maximum number of redirects allowed (--connect only)',
+    'maximum number of redirects allowed',
     parseInt,
     10
   )
@@ -221,7 +219,7 @@ program
   .option(
     '--slash',
     'enable slash commands for control frames (/ping [data], /pong [data], ' +
-      '/close [code [, reason]])'
+      '/close [code [, reason]]) (--connect only)'
   )
   .option('-c, --connect <url>', 'connect to a WebSocket server')
   .option(
@@ -230,19 +228,30 @@ program
     collect,
     []
   )
-  .option('-j, --json', 'parse multiline JSON')
-  .option('-L, --location', 'follow redirects (--connect only)')
+  .option('-j, --json', 'parse multiline JSON (--connect only)')
   .option('-l, --listen <port>', 'listen on port')
-  .option('-n, --no-check', 'do not check for unauthorized certificates')
+  .option('-L, --location', 'follow redirects')
+  .option(
+    '-n, --no-check',
+    'do not check for unauthorized certificates (--connect only)'
+  )
   .option('-o, --origin <origin>', 'optional origin')
   .option('-p, --protocol <version>', 'optional protocol version')
   .option(
     '-P, --show-ping-pong',
-    'print a notification when a ping or pong is received'
+    'print a notification when a ping or pong is received (--connect only)'
   )
-  .option('-s, --subprotocol <protocol>', 'optional subprotocol', collect, [])
+  .option(
+    '-s, --subprotocol <protocol>',
+    'optional subprotocol. Repeat to specify more than one',
+    collect,
+    []
+  )
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
-  .option('-x, --execute <command>', 'execute command after connecting')
+  .option(
+    '-x, --execute <command>',
+    'execute command after connecting (--connect only)'
+  )
   .parse(process.argv);
 
 const programOptions = program.opts();
@@ -354,10 +363,7 @@ if (programOptions.listen) {
     }
 
     const ws = new WebSocket(connectUrl, programOptions.subprotocol, options);
-    const jsonHandler = new JsonInputHandler({
-      ws,
-      wsConsole,
-    });
+    const jsonHandler = new JsonInputHandler(ws, wsConsole);
 
     ws.on('open', () => {
       if (programOptions.execute) {
@@ -379,18 +385,18 @@ if (programOptions.listen) {
           if (programOptions.slash && data[0] === '/') {
             const toks = data.split(/\s+/);
             switch (toks[0].substr(1)) {
-            case 'ping':
+              case 'ping':
                 if (toks.length >= 2) {
-                    ws.ping(toks[1]);
+                  ws.ping(toks[1]);
                 } else {
-                    ws.ping(noop);
+                  ws.ping(noop);
                 }
                 break;
-            case 'pong':
+              case 'pong':
                 if (toks.length >= 2) {
-                    ws.pong(toks[1]);
+                  ws.pong(toks[1]);
                 } else {
-                    ws.pong(noop);
+                  ws.pong(noop);
                 }
                 break;
               case 'close': {
