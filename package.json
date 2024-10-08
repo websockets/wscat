@@ -1,6 +1,6 @@
 {
   "name": "wscat",
-  "version": "5.2.2",
+  "version": "6.0.0",
   "description": "WebSocket cat",
   "main": "index.js",
   "scripts": {
