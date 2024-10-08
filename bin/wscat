@@ -5,11 +5,11 @@
 const EventEmitter = require('events');
 const fs = require('fs');
 const HttpsProxyAgent = require('https-proxy-agent');
-const read = require('read');
 const readline = require('readline');
 const tty = require('tty');
 const WebSocket = require('ws');
 const { program } = require('commander');
+const { read } = require('read');
 
 /**
  * InputReader - processes console input.
@@ -385,17 +385,14 @@ if (programOptions.listen) {
   };
 
   if (programOptions.passphrase === true) {
-    read(
-      {
-        prompt: 'Passphrase: ',
-        silent: true,
-        replace: '*'
-      },
-      (err, passphrase) => {
-        options.passphrase = passphrase;
-        cont();
-      }
-    );
+    read({
+      prompt: 'Passphrase: ',
+      silent: true,
+      replace: '*'
+    }).then((passphrase) => {
+      options.passphrase = passphrase;
+      cont();
+    });
   } else if (typeof programOptions.passphrase === 'string') {
     options.passphrase = programOptions.passphrase;
     cont();
