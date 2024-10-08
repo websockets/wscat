@@ -17,6 +17,9 @@
   ],
   "author": "Arnout Kazemier, Einar Otto Stangvik",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "commander": "^12.1.0",
     "https-proxy-agent": "^7.0.5",
