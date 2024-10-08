@@ -5,11 +5,11 @@
 const EventEmitter = require('events');
 const fs = require('fs');
 const HttpsProxyAgent = require('https-proxy-agent');
-const program = require('commander');
 const read = require('read');
 const readline = require('readline');
 const tty = require('tty');
 const WebSocket = require('ws');
+const { program } = require('commander');
 
 /**
  * InputReader - processes console input.
