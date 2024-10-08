@@ -58,12 +58,6 @@ class Console extends EventEmitter {
   }
 
   prompt() {
-    this.readlineInterface.setPrompt('> ');
-    this.readlineInterface.prompt(true);
-  }
-
-  multilinePrompt() {
-    this.readlineInterface.setPrompt('| ');
     this.readlineInterface.prompt(true);
   }
 
@@ -97,83 +91,6 @@ class Console extends EventEmitter {
 
   resume() {
     this.stdin.removeListener('keypress', this._resetInput);
-  }
-}
-
-class JsonInputHandler {
-  constructor(ws, wsConsole) {
-    this.ws = ws;
-    this.wsConsole = wsConsole;
-    this.maxEmptyLines = 2;
-
-    this.emptyLineCount = 0;
-    this.inputList = [];
-  }
-
-  get hasExceededMaxLines() {
-    return this.emptyLineCount >= this.maxEmptyLines;
-  }
-
-  get hasPartialJson() {
-    return this.inputList.length !== 0;
-  }
-
-  reset() {
-    this.emptyLineCount = 0;
-    this.inputList = [];
-  }
-
-  attemptParseAndSend() {
-    const jsonStr = this.inputList.join('\n');
-    JSON.parse(jsonStr);
-    this.ws.send(jsonStr);
-    this.wsConsole.prompt();
-    this.reset();
-  }
-
-  recoverFromParseError(error) {
-    if (/Unexpected end of JSON input/.test(error.message)) {
-      this.wsConsole.multilinePrompt();
-    } else if (/Unexpected/.test(error.message)) {
-      this.wsConsole.print(
-        Console.Types.Error,
-        'Illegal JSON text ',
-        Console.Colors.Yellow
-      );
-      this.reset();
-      this.wsConsole.prompt();
-    }
-  }
-
-  resetFromMaxEmptyLines() {
-    this.reset();
-    this.wsConsole.print(
-      Console.Types.Control,
-      'You typed two empty lines, resetting JSON text.',
-      Console.Colors.Default
-    );
-  }
-
-  handle(data) {
-    if (data.trim() === '') {
-      if (this.hasPartialJson) {
-        this.emptyLineCount++;
-        if (this.hasExceededMaxLines) {
-          this.resetFromMaxEmptyLines();
-        } else {
-          this.wsConsole.multilinePrompt();
-        }
-      } else {
-        this.wsConsole.prompt();
-      }
-    } else {
-      this.inputList.push(data);
-      try {
-        this.attemptParseAndSend();
-      } catch (error) {
-        this.recoverFromParseError(error);
-      }
-    }
   }
 }
 
@@ -228,7 +145,6 @@ program
     collect,
     []
   )
-  .option('-j, --json', 'parse multiline JSON (--connect only)')
   .option('-l, --listen <port>', 'listen on port')
   .option('-L, --location', 'follow redirects')
   .option(
@@ -363,7 +279,6 @@ if (programOptions.listen) {
     }
 
     const ws = new WebSocket(connectUrl, programOptions.subprotocol, options);
-    const jsonHandler = new JsonInputHandler(ws, wsConsole);
 
     ws.on('open', () => {
       if (programOptions.execute) {
@@ -422,13 +337,10 @@ if (programOptions.listen) {
                   Console.Colors.Yellow
                 );
             }
-            wsConsole.prompt();
-          } else if (programOptions.json) {
-            jsonHandler.handle(data);
           } else {
             ws.send(data);
-            wsConsole.prompt();
           }
+          wsConsole.prompt();
         });
       }
     });
