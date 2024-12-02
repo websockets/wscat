@@ -20,7 +20,7 @@
   "dependencies": {
     "commander": "^9.3.0",
     "https-proxy-agent": "^7.0.2",
-    "read": "^1.0.7",
+    "read": "^4.0.0",
     "ws": "^8.0.0"
   },
   "bin": {
