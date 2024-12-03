@@ -285,7 +285,11 @@ if (programOptions.listen) {
 
     ws.on('open', () => {
       if (programOptions.execute) {
-        ws.send(programOptions.execute);
+        if (programOptions.binary) {
+          ws.send(Buffer.from(programOptions.execute, 'hex'));
+        } else {
+          ws.send(programOptions.execute);
+        }
         setTimeout(
           () => {
             ws.close();
