@@ -166,7 +166,9 @@ program
   .option('-w, --wait <seconds>', 'wait given seconds after executing command')
   .option(
     '-x, --execute <command>',
-    'execute command after connecting (--connect only)'
+    'execute command after connecting (--connect only)',
+    collect,
+    []
   )
   .parse(process.argv);
 
@@ -282,7 +284,9 @@ if (programOptions.listen) {
 
     ws.on('open', () => {
       if (programOptions.execute) {
-        ws.send(programOptions.execute);
+        for (let index = 0; index < programOptions.execute.length; index++) {
+          ws.send(programOptions.execute[index]);
+        }
         setTimeout(
           () => {
             ws.close();
