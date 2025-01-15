@@ -1,6 +1,6 @@
 {
   "name": "wscat",
-  "version": "5.2.0",
+  "version": "6.0.1",
   "description": "WebSocket cat",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/websockets/wscat"
+    "url": "git+https://github.com/websockets/wscat.git"
   },
   "keywords": [
     "wscat",
@@ -17,13 +17,16 @@
   ],
   "author": "Arnout Kazemier, Einar Otto Stangvik",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "commander": "^9.3.0",
-    "https-proxy-agent": "^5.0.0",
-    "read": "^1.0.7",
+    "commander": "^12.1.0",
+    "https-proxy-agent": "^7.0.5",
+    "read": "^4.0.0",
     "ws": "^8.0.0"
   },
   "bin": {
-    "wscat": "./bin/wscat"
+    "wscat": "bin/wscat"
   }
 }
