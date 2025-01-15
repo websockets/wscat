@@ -1,0 +1,17 @@
+stages:
+  - test
+
+variables:
+  XREFCHECK_URL: "https://github.com/serokell/xrefcheck/releases/download/v0.1.1/release.tar.gz"
+
+verify-doc-links:
+  stage: test
+  allow_failure: true
+  retry:
+    max: 1
+    when: script_failure
+  only:
+    refs:
+      - merge_requests
+  script:
+    - wget -O - "$XREFCHECK_URL" | tar xzv && xrefcheck/bin/xrefcheck --no-progress --ignored xrefcheck
