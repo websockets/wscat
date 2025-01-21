@@ -138,6 +138,7 @@ program
     'enable slash commands for control frames (/ping [data], /pong [data], ' +
       '/close [code [, reason]]) (--connect only)'
   )
+  .option('-b, --binary', 'communicate with WebSocket server by binary data')
   .option('-c, --connect <url>', 'connect to a WebSocket server')
   .option(
     '-H, --header <header:value>',
@@ -198,6 +199,7 @@ if (programOptions.listen) {
 
   wsConsole.on('line', (data) => {
     if (ws) {
+      if (programOptions.binary) data = Buffer.from(data, 'hex');
       ws.send(data);
       wsConsole.prompt();
     }
@@ -231,6 +233,7 @@ if (programOptions.listen) {
     });
 
     ws.on('message', (data) => {
+      if (programOptions.binary) data = data.toString('hex');
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
   });
@@ -282,7 +285,11 @@ if (programOptions.listen) {
 
     ws.on('open', () => {
       if (programOptions.execute) {
-        ws.send(programOptions.execute);
+        if (programOptions.binary) {
+          ws.send(Buffer.from(programOptions.execute, 'hex'));
+        } else {
+          ws.send(programOptions.execute);
+        }
         setTimeout(
           () => {
             ws.close();
@@ -338,6 +345,7 @@ if (programOptions.listen) {
                 );
             }
           } else {
+            if (programOptions.binary) data = Buffer.from(data, 'hex');
             ws.send(data);
           }
           wsConsole.prompt();
@@ -363,6 +371,7 @@ if (programOptions.listen) {
     });
 
     ws.on('message', (data) => {
+      if (programOptions.binary) data = data.toString('hex');
       wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
     });
 
