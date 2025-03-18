@@ -163,7 +163,7 @@ program
     collect,
     []
   )
-  .option('-w, --wait <seconds>', 'wait given seconds after executing command')
+  .option('-w, --wait <seconds>', 'wait given seconds after executing command (-1 to hold open)')
   .option(
     '-x, --execute <command>',
     'execute command after connecting (--connect only)'
@@ -283,12 +283,14 @@ if (programOptions.listen) {
     ws.on('open', () => {
       if (programOptions.execute) {
         ws.send(programOptions.execute);
-        setTimeout(
-          () => {
-            ws.close();
-          },
-          programOptions.wait ? programOptions.wait * 1000 : 2000
-        );
+        if (programOptions.wait !== '-1') {
+            setTimeout(
+              () => {
+                ws.close();
+              },
+              programOptions.wait ? programOptions.wait * 1000 : 2000
+            );
+        }
       } else {
         wsConsole.print(
           Console.Types.Control,
