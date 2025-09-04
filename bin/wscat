@@ -399,10 +399,12 @@ if (programOptions.listen) {
       }
     });
 
-    wsConsole.on('close', () => {
-      ws.close();
-      process.exit();
-    });
+    if (!programOptions.execute.length) {
+      wsConsole.on('close', () => {
+        ws.close();
+        process.exit();
+      });
+    }
   };
 
   if (programOptions.passphrase === true) {
