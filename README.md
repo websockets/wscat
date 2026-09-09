@@ -76,6 +76,12 @@ sessions, in both `--connect` and `--listen` mode. When persistence is enabled, 
 latest 1,000 entries are available in each new session. Empty lines and
 consecutive duplicates are skipped.
 
+Press Ctrl+R and type part of a command to search history from newest to oldest.
+Press Ctrl+R again to find the next older match. Backspace edits the search text.
+Enter sends the selected command; Escape returns to the normal prompt so you can
+edit it first. Ctrl+G cancels the search and restores the line you were typing.
+Searching also works with in-memory history when persistence is disabled.
+
 Commands are appended immediately, one per line, so concurrent sessions can share
 the file. The file is not automatically truncated; delete or edit it between
 sessions to clear or trim saved history. New files are readable and writable only

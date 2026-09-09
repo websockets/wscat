@@ -361,6 +361,7 @@ for (const operation of ['read', 'write']) {
       fs.rmdirSync(fixture.history);
       assert.strictEqual(await send(session, socket, 'second\n'), 'second');
       assert.strictEqual(await send(session, socket, '\u001b[A\n'), 'second');
+      assert.strictEqual(await send(session, socket, '\x12first\r'), 'first');
       session.child.stdin.write('/close\n');
 
       assert.strictEqual((await session.exited)[0], 0);
@@ -370,6 +371,77 @@ for (const operation of ['read', 'write']) {
     }
   );
 }
+
+test(
+  'Ctrl+R searches saved history while incoming messages redraw the prompt',
+  {
+    timeout: 10000
+  },
+  async (t) => {
+    const fixture = createFixture(t);
+    const server = await createServer(t);
+    const saved = 'old apple\nunrelated\nrecent apple\n';
+
+    fs.writeFileSync(fixture.history, saved);
+
+    const session = start(t, fixture, [
+      '--history',
+      '--slash',
+      '-c',
+      `ws://127.0.0.1:${server.address().port}`
+    ]);
+
+    await waitForOutput(session, 'ready');
+
+    const socket = [...server.clients][0];
+    const received = [];
+
+    socket.on('message', (data) => received.push(data.toString()));
+    session.child.stdin.write('\x12apple');
+    await waitForOutput(session, "(reverse-i-search)`apple': recent apple");
+    session.output = '';
+    socket.send('message during search');
+    await waitForOutput(session, "(reverse-i-search)`apple': recent apple");
+
+    assert.ok(session.output.includes('< message during search'));
+    assert.deepStrictEqual(received, []);
+    assert.strictEqual(fs.readFileSync(fixture.history, 'utf8'), saved);
+    assert.strictEqual(await send(session, socket, '\x12\r'), 'old apple');
+    assert.strictEqual(
+      fs.readFileSync(fixture.history, 'utf8'),
+      saved + 'old apple\n'
+    );
+    session.child.stdin.write('/close\r');
+    assert.strictEqual((await session.exited)[0], 0);
+    assert.strictEqual(session.errors, '');
+  }
+);
+
+test(
+  'Ctrl+R works with persistence disabled',
+  { timeout: 10000 },
+  async (t) => {
+    const fixture = createFixture(t);
+    const server = await createServer(t);
+    const session = start(t, fixture, [
+      '--no-history',
+      '-c',
+      `ws://127.0.0.1:${server.address().port}`
+    ]);
+
+    await waitForOutput(session, 'ready');
+
+    const socket = [...server.clients][0];
+
+    await send(session, socket, 'old apple\r');
+    await send(session, socket, 'recent apple\r');
+    assert.strictEqual(
+      await send(session, socket, '\x12apple\x12\r'),
+      'old apple'
+    );
+    assert.strictEqual(fs.existsSync(fixture.history), false);
+  }
+);
 
 for (const failure of ['throw', 'empty', 'relative', 'missing', 'detection']) {
   test(
