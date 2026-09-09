@@ -316,7 +316,8 @@ if (programOptions.listen) {
     options.headers = headers;
 
     let connectUrl = programOptions.connect;
-    if (!/^[a-z][a-z0-9.+-]*:/i.test(connectUrl)) {
+    // A hostname followed by a numeric port is not a URL scheme.
+    if (!/^[a-z][a-z0-9.+-]*:(?!\d+(?:[/?#]|$))/i.test(connectUrl)) {
       connectUrl = `ws://${connectUrl}`;
     }
 

@@ -31,8 +31,8 @@ function createFixture(t) {
   };
 }
 
-async function createServer(t) {
-  const server = new WebSocket.Server({ port: 0, host: '127.0.0.1' });
+async function createServer(t, host = '127.0.0.1') {
+  const server = new WebSocket.Server({ port: 0, host });
 
   server.on('connection', (socket) => socket.send('ready'));
   t.after(() => {
@@ -104,6 +104,93 @@ async function send(session, socket, input) {
   session.child.stdin.write(input);
   return (await message)[0].toString();
 }
+
+test(
+  'pasting inside JSON sends and stores the exact edited payload',
+  {
+    timeout: 10000
+  },
+  async (t) => {
+    const fixture = createFixture(t);
+    const server = await createServer(t);
+    const session = start(t, fixture, [
+      '--history',
+      '-c',
+      `ws://127.0.0.1:${server.address().port}`
+    ]);
+
+    await waitForOutput(session, 'ready');
+
+    const before = '{"command":"account_info", "account": "';
+    const after = '" }';
+    const address = 'rwietsevLFg8XSmG3bEZzFein1g8RBZqWD';
+    const expected = before + address + after;
+
+    session.child.stdin.write(before + after);
+    session.child.stdin.write('\x1b[D'.repeat(after.length));
+    assert.strictEqual(
+      await send(session, [...server.clients][0], address + '\r'),
+      expected
+    );
+    assert.strictEqual(
+      fs.readFileSync(fixture.history, 'utf8'),
+      expected + '\n'
+    );
+    assert.strictEqual(session.errors, '');
+  }
+);
+
+for (const prefix of [
+  'localhost:',
+  'LOCALHOST:',
+  '127.0.0.1:',
+  'ws://localhost:',
+  'http://localhost:',
+  'ws:localhost:',
+  'http:localhost:'
+]) {
+  test(`connects to ${prefix}<port>`, { timeout: 10000 }, async (t) => {
+    const fixture = createFixture(t);
+    const host = prefix === '127.0.0.1:' ? '127.0.0.1' : 'localhost';
+    const server = await createServer(t, host);
+    const session = start(t, fixture, [
+      '--no-history',
+      '-c',
+      `${prefix}${server.address().port}`
+    ]);
+
+    await waitForOutput(session, 'ready');
+    assert.strictEqual(
+      await send(session, [...server.clients][0], 'hello\r'),
+      'hello'
+    );
+    assert.strictEqual(session.errors, '');
+  });
+}
+
+test(
+  'a bare hostname and port preserve the path and query',
+  {
+    timeout: 10000
+  },
+  async (t) => {
+    const fixture = createFixture(t);
+    const server = await createServer(t, 'localhost');
+    const suffix = '/echo?next=ws://example.com:4000';
+    const connection = once(server, 'connection');
+    const session = start(t, fixture, [
+      '--no-history',
+      '-c',
+      `localhost:${server.address().port}${suffix}`
+    ]);
+    const [socket, request] = await connection;
+
+    await waitForOutput(session, 'ready');
+    assert.strictEqual(request.url, suffix);
+    assert.strictEqual(await send(session, socket, 'hello\r'), 'hello');
+    assert.strictEqual(session.errors, '');
+  }
+);
 
 test(
   'local CLI leaves stored history untouched by default',

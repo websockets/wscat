@@ -183,3 +183,82 @@ test('pausing and resuming readline also pauses and resumes terminal input', (t)
   input.write('hello\r');
   assert.deepStrictEqual(lines, ['hello']);
 });
+
+for (const payload of ['rwietsevLFg8XSmG3bEZzFein1g8RBZqWD', 'héllo 世界 🍎']) {
+  test(`pasting ${payload} inserts at the cursor and preserves the suffix`, (t) => {
+    const { input, rl, lines } = createSession(t);
+    const before = '{"command":"account_info", "account": "';
+    const after = '" }';
+
+    input.write(before + after);
+    input.write('\x1b[D'.repeat(after.length));
+    assert.strictEqual(rl.cursor, before.length);
+    input.write(payload);
+    assert.strictEqual(rl.line, before + payload + after);
+    assert.strictEqual(rl.cursor, before.length + payload.length);
+    assert.deepStrictEqual(lines, []);
+    input.write('\r');
+    assert.deepStrictEqual(lines, [before + payload + after]);
+  });
+}
+
+test('pasting after a Unicode prefix uses the character cursor position', (t) => {
+  const { input, rl, lines } = createSession(t);
+  const before = '{"🍎":"世界", "account":"';
+  const after = '"}';
+
+  input.write(before + after);
+  input.write('\x1b[D'.repeat(after.length));
+  input.write('address');
+  assert.strictEqual(rl.line, before + 'address' + after);
+  assert.strictEqual(rl.cursor, before.length + 'address'.length);
+  input.write('\r');
+  assert.deepStrictEqual(lines, [before + 'address' + after]);
+});
+
+test('pasting into a recalled command preserves its remaining text', (t) => {
+  const { input, rl, lines } = createSession(t, ['{"account":""}']);
+
+  input.write('\x1b[A\x1b[D\x1b[D');
+  input.write('address');
+  assert.strictEqual(rl.line, '{"account":"address"}');
+  input.write('\r');
+  assert.deepStrictEqual(lines, ['{"account":"address"}']);
+});
+
+test('a paste split across UTF-8 bytes preserves the text and cursor', (t) => {
+  const { input, rl, lines } = createSession(t);
+  const bytes = Buffer.from('世界🍎');
+
+  input.write('""');
+  input.write('\x1b[D');
+  input.write(bytes.subarray(0, 4));
+  input.write(bytes.subarray(4));
+  assert.strictEqual(rl.line, '"世界🍎"');
+  assert.strictEqual(rl.cursor, '"世界🍎'.length);
+  input.write('\r');
+  assert.deepStrictEqual(lines, ['"世界🍎"']);
+});
+
+test('bracketed paste inserts text without retaining terminal markers', (t) => {
+  const { input, rl, lines } = createSession(t);
+
+  input.write('""\x1b[D');
+  input.write('\x1b[200~address\x1b[201~');
+  assert.strictEqual(rl.line, '"address"');
+  assert.strictEqual(rl.cursor, '"address'.length);
+  assert.deepStrictEqual(lines, []);
+  input.write('\r');
+  assert.deepStrictEqual(lines, ['"address"']);
+});
+
+test('bracketed paste can supply a reverse-search query without leaving search', (t) => {
+  const { input, rl, lines } = createSession(t, ['message containing address']);
+
+  input.write('\x12\x1b[200~address\x1b[201~');
+  assert.strictEqual(rl.getPrompt(), "(reverse-i-search)`address': ");
+  assert.strictEqual(rl.line, 'message containing address');
+  assert.deepStrictEqual(lines, []);
+  input.write('\r');
+  assert.deepStrictEqual(lines, ['message containing address']);
+});

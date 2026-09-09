@@ -51,6 +51,10 @@ Options:
 
 ## Example
 
+When `--connect` is given a host without a protocol, wscat assumes `ws://`. For
+example, `wscat -c localhost:4000` connects to `ws://localhost:4000`. Specify
+`wss://` explicitly when connecting over TLS.
+
 ```
 $ wscat -c wss://websocket-echo.com
 Connected (press CTRL+C to quit)
