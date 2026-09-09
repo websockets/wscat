@@ -4,12 +4,14 @@
 
 const EventEmitter = require('events');
 const fs = require('fs');
-const readline = require('readline');
 const tty = require('tty');
 const WebSocket = require('ws');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { program } = require('commander');
 const { read } = require('read');
+
+const formatJson = require('../lib/format-json');
+const createReadline = require('../lib/pretty-readline');
 
 /**
  * InputReader - processes console input.
@@ -23,8 +25,12 @@ class Console extends EventEmitter {
     this.stdin = process.stdin;
     this.stdout = process.stdout;
     this.stderr = process.stderr;
+    this.pretty = !!programOptions.pretty;
 
-    this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
+    this.readlineInterface = createReadline({
+      input: this.stdin,
+      output: this.stdout
+    });
 
     this.readlineInterface
       .on('line', (data) => {
@@ -32,6 +38,14 @@ class Console extends EventEmitter {
       })
       .on('close', () => {
         this.emit('close');
+      })
+      .on('togglePretty', () => {
+        this.pretty = !this.pretty;
+        this.print(
+          Console.Types.Control,
+          `JSON formatting ${this.pretty ? 'on' : 'off'}`,
+          Console.Colors.Green
+        );
       });
 
     this._resetInput = () => {
@@ -61,6 +75,16 @@ class Console extends EventEmitter {
     this.readlineInterface.prompt(true);
   }
 
+  printMessage(data, isBinary) {
+    if (this.pretty && tty.isatty(1) && !isBinary) {
+      data = formatJson(
+        data.toString(),
+        programOptions.color && !programOptions.execute.length
+      );
+    }
+    this.print(Console.Types.Incoming, data, Console.Colors.Blue);
+  }
+
   print(type, msg, color) {
     if (tty.isatty(1)) {
       this.clear();
@@ -68,7 +92,9 @@ class Console extends EventEmitter {
       if (programOptions.execute.length) color = type = '';
       else if (!programOptions.color) color = '';
 
-      this.stdout.write(color + type + msg + Console.Colors.Default + '\n');
+      const reset = color ? Console.Colors.Default : '';
+
+      this.stdout.write(color + type + msg + reset + '\n');
       this.prompt();
     } else if (type === Console.Types.Incoming) {
       this.stdout.write(msg + '\n');
@@ -129,6 +155,7 @@ program
     "specify a Client SSL Certificate Key's passphrase (--connect only). " +
       "If you don't provide a value, it will be prompted for"
   )
+  .option('--pretty', 'format received JSON (Ctrl+T toggles during a session)')
   .option(
     '--proxy <[protocol://]host[:port]>',
     'connect via a proxy. Proxy must support CONNECT method'
@@ -236,8 +263,8 @@ if (programOptions.listen) {
       wsConsole.print(Console.Types.Error, err.message, Console.Colors.Yellow);
     });
 
-    ws.on('message', (data) => {
-      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+    ws.on('message', (data, isBinary) => {
+      wsConsole.printMessage(data, isBinary);
     });
   });
 
@@ -375,8 +402,8 @@ if (programOptions.listen) {
       process.exit(-1);
     });
 
-    ws.on('message', (data) => {
-      wsConsole.print(Console.Types.Incoming, data, Console.Colors.Blue);
+    ws.on('message', (data, isBinary) => {
+      wsConsole.printMessage(data, isBinary);
     });
 
     ws.on('ping', (data) => {

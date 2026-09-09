@@ -26,6 +26,7 @@ Options:
   --no-color                          run without color
   --passphrase [passphrase]           specify a Client SSL Certificate Key's passphrase (--connect
                                       only). If you don't provide a value, it will be prompted for
+  --pretty                            format received JSON (Ctrl+T toggles during a session)
   --proxy <[protocol://]host[:port]>  connect via a proxy. Proxy must support CONNECT method
   --slash                             enable slash commands for control frames (/ping [data], /pong
                                       [data], /close [code [, reason]]) (--connect only)
@@ -57,6 +58,13 @@ Connected (press CTRL+C to quit)
 > are you a happy parrot?
 < are you a happy parrot?
 ```
+
+## JSON output
+
+Use `--pretty` to indent and colour received JSON. Press Ctrl+T to turn formatting
+off or on during a session. Formatting starts off without `--pretty`.
+Use `--no-color` for indentation only. Sent messages, binary messages, and piped
+output stay unchanged.
 
 ## License
 
