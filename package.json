@@ -4,7 +4,7 @@
   "description": "WebSocket cat",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No test specified\""
+    "test": "node --test"
   },
   "repository": {
     "type": "git",
