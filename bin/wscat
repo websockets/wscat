@@ -4,12 +4,17 @@
 
 const EventEmitter = require('events');
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const readline = require('readline');
 const tty = require('tty');
 const WebSocket = require('ws');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { program } = require('commander');
 const { read } = require('read');
+
+const setupHistory = require('../lib/history');
+const isGlobalInstall = require('../lib/is-global-install');
 
 /**
  * InputReader - processes console input.
@@ -24,7 +29,31 @@ class Console extends EventEmitter {
     this.stdout = process.stdout;
     this.stderr = process.stderr;
 
-    this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
+    const history =
+      this.stdin.isTTY &&
+      this.stdout.isTTY &&
+      !programOptions.execute.length &&
+      (programOptions.history === undefined
+        ? isGlobalInstall(process.argv[1])
+        : programOptions.history);
+
+    this.readlineInterface = readline.createInterface({
+      input: this.stdin,
+      output: this.stdout,
+      historySize: history ? 1000 : undefined
+    });
+
+    if (history) {
+      setupHistory(
+        this.readlineInterface,
+        path.join(os.homedir(), '.wscat_history'),
+        (err) => {
+          this.stderr.write(
+            `warning: Could not access history file: ${err.message}\n`
+          );
+        }
+      );
+    }
 
     this.readlineInterface
       .on('line', (data) => {
@@ -112,6 +141,7 @@ program
   .option('--auth <username:password>', 'add basic HTTP authentication header')
   .option('--ca <ca>', 'specify a Certificate Authority (--connect only)')
   .option('--cert <cert>', 'specify a Client SSL Certificate (--connect only)')
+  .option('--history', 'enable persistent command history for local runs')
   .option('--host <host>', 'optional host')
   .option(
     '--key <key>',
@@ -124,6 +154,7 @@ program
     10
   )
   .option('--no-color', 'run without color')
+  .option('--no-history', 'disable persistent command history')
   .option(
     '--passphrase [passphrase]',
     "specify a Client SSL Certificate Key's passphrase (--connect only). " +

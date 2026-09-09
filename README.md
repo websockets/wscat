@@ -20,10 +20,12 @@ Options:
   --auth <username:password>          add basic HTTP authentication header
   --ca <ca>                           specify a Certificate Authority (--connect only)
   --cert <cert>                       specify a Client SSL Certificate (--connect only)
+  --history                           enable persistent command history for local runs
   --host <host>                       optional host
   --key <key>                         specify a Client SSL Certificate's key (--connect only)
   --max-redirects [num]               maximum number of redirects allowed (default: 10)
   --no-color                          run without color
+  --no-history                        disable persistent command history
   --passphrase [passphrase]           specify a Client SSL Certificate Key's passphrase (--connect
                                       only). If you don't provide a value, it will be prompted for
   --proxy <[protocol://]host[:port]>  connect via a proxy. Proxy must support CONNECT method
@@ -57,6 +59,39 @@ Connected (press CTRL+C to quit)
 > are you a happy parrot?
 < are you a happy parrot?
 ```
+
+## Command history
+
+When launched through a global npm or Bun installation, interactive sessions save
+submitted messages and slash commands to `~/.wscat_history`. Local installations
+and scripts run directly from a checkout keep history in memory and do not access
+that file unless `--history` is passed:
+
+```
+node bin/wscat --history -c wss://websocket-echo.com
+```
+
+Use the Up and Down arrow keys to browse commands from the current and previous
+sessions, in both `--connect` and `--listen` mode. When persistence is enabled, the
+latest 1,000 entries are available in each new session. Empty lines and
+consecutive duplicates are skipped.
+
+Commands are appended immediately, one per line, so concurrent sessions can share
+the file. The file is not automatically truncated; delete or edit it between
+sessions to clear or trim saved history. New files are readable and writable only
+by their owner on systems that support Unix file permissions. History is stored
+in plain text, so use `--no-history` when sending sensitive data. This option
+disables reading and writing the file while retaining history within the current
+session. Piped input or output and `--execute` commands do not access the history
+file.
+
+Global installation detection supports npm's global launcher layout (including
+custom prefixes) and Bun's default global directory, `BUN_INSTALL`, or
+`BUN_INSTALL_GLOBAL_DIR`. For other installation layouts, use `--history` to
+enable persistence explicitly.
+
+If the history file cannot be read or written, wscat prints a warning and continues
+with history in memory.
 
 ## License
 
