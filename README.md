@@ -72,7 +72,8 @@ interactive use. Each session loads the last 1,000 entries. For local runs, use
 
 Use Up/Down to browse history. Press Ctrl+R, then type to search. Press Ctrl+R
 again for an older match. Enter sends the command. Escape selects it for editing.
-Ctrl+G cancels the search.
+Ctrl+G cancels the search. Ctrl+C clears input and search text. At an empty
+prompt, Ctrl+C closes the session.
 
 The file stores plain text. Use `--no-history` for sensitive data. Piped input or
 output and `--execute` do not use the file. If detection or file access fails,

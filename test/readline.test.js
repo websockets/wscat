@@ -134,14 +134,58 @@ test('search and backspace preserve Unicode characters', (t) => {
   assert.deepStrictEqual(lines, ['hello 世界 🍎']);
 });
 
-test('Ctrl+C still closes during search and restores terminal mode', (t) => {
-  const { input, rl, lines, modes } = createSession(t, ['hello']);
+for (const [name, keys] of [
+  ['a draft at the cursor', 'draft\x1b[D'],
+  ['a recalled command', '\x1b[A'],
+  ['a search match and the original draft', 'draft\x12hello'],
+  ['a search with no match', '\x12missing'],
+  ['an empty search with a draft', 'draft\x12'],
+  ['whitespace', '   ']
+]) {
+  test(`Ctrl+C clears ${name} before closing on the next press`, (t) => {
+    const history = ['hello', 'older command'];
+    const { input, rl, lines, modes } = createSession(t, history);
+
+    rl.setPrompt('custom> ');
+    input.write(keys);
+    input.write('\x03');
+    assert.notStrictEqual(rl.closed, true);
+    assert.strictEqual(rl.line, '');
+    assert.strictEqual(rl.cursor, 0);
+    assert.strictEqual(rl.getPrompt(), 'custom> ');
+    assert.deepStrictEqual(rl.history, history);
+    assert.deepStrictEqual(lines, []);
+    assert.deepStrictEqual(modes, [true]);
+
+    input.write('\x03');
+    assert.strictEqual(rl.closed, true);
+    assert.deepStrictEqual(modes, [true, false]);
+    assert.deepStrictEqual(lines, []);
+    assert.strictEqual(input.listenerCount('keypress'), 0);
+  });
+}
+
+for (const keys of ['', '\x12']) {
+  test(`Ctrl+C closes an empty ${keys ? 'search' : 'prompt'}`, (t) => {
+    const { input, rl, lines, modes } = createSession(t, ['hello']);
+
+    input.write(keys + '\x03');
+    assert.strictEqual(rl.closed, true);
+    assert.strictEqual(rl.getPrompt(), '> ');
+    assert.deepStrictEqual(modes, [true, false]);
+    assert.deepStrictEqual(lines, []);
+  });
+}
+
+test('editing and history search still work after Ctrl+C clears a search', (t) => {
+  const { input, rl, lines } = createSession(t, ['hello']);
 
   input.write('\x12hello\x03');
-  assert.strictEqual(rl.closed, true);
-  assert.deepStrictEqual(modes, [true, false]);
-  assert.deepStrictEqual(lines, []);
-  assert.strictEqual(input.listenerCount('keypress'), 0);
+  input.write('new command\r');
+  assert.deepStrictEqual(lines, ['new command']);
+  input.write('\x12hello\r');
+  assert.deepStrictEqual(lines, ['new command', 'hello']);
+  assert.strictEqual(rl.getPrompt(), '> ');
 });
 
 test('ordinary editing, arrow history and Ctrl+D continue to work', (t) => {

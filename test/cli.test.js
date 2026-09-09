@@ -505,6 +505,49 @@ test(
 );
 
 test(
+  'Ctrl+C cancels input without sending or saving it and closes an empty prompt',
+  { timeout: 10000 },
+  async (t) => {
+    const fixture = createFixture(t);
+    const server = await createServer(t);
+    const saved = 'saved command\n';
+
+    fs.writeFileSync(fixture.history, saved);
+
+    const session = start(t, fixture, [
+      '--history',
+      '-c',
+      `ws://127.0.0.1:${server.address().port}`
+    ]);
+
+    await waitForOutput(session, 'ready');
+
+    const socket = [...server.clients][0];
+    const received = [];
+
+    socket.on('message', (data) => received.push(data.toString()));
+
+    for (const keys of ['draft', '\x12saved', '\x12missing']) {
+      session.child.stdin.write(keys + '\x03');
+      assert.strictEqual(await send(session, socket, 'kept\r'), 'kept');
+      assert.strictEqual(
+        fs.readFileSync(fixture.history, 'utf8'),
+        saved + 'kept\n'
+      );
+    }
+
+    assert.deepStrictEqual(received, ['kept', 'kept', 'kept']);
+    session.child.stdin.write('\x12kept\x03\x03');
+    assert.strictEqual((await session.exited)[0], 0);
+    assert.strictEqual(
+      fs.readFileSync(fixture.history, 'utf8'),
+      saved + 'kept\n'
+    );
+    assert.strictEqual(session.errors, '');
+  }
+);
+
+test(
   'Ctrl+R works with persistence disabled',
   { timeout: 10000 },
   async (t) => {
