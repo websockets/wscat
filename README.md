@@ -66,42 +66,17 @@ Connected (press CTRL+C to quit)
 
 ## Command history
 
-When launched through a global npm or Bun installation, interactive sessions save
-submitted messages and slash commands to `~/.wscat_history`. Local installations
-and scripts run directly from a checkout keep history in memory and do not access
-that file unless `--history` is passed:
+Global npm and Bun installations save commands to `~/.wscat_history` during
+interactive use. Each session loads the last 1,000 entries. For local runs, use
+`--history` to save commands.
 
-```
-node bin/wscat --history -c wss://websocket-echo.com
-```
+Use Up/Down to browse history. Press Ctrl+R, then type to search. Press Ctrl+R
+again for an older match. Enter sends the command. Escape selects it for editing.
+Ctrl+G cancels the search.
 
-Use the Up and Down arrow keys to browse commands from the current and previous
-sessions, in both `--connect` and `--listen` mode. When persistence is enabled, the
-latest 1,000 entries are available in each new session. Empty lines and
-consecutive duplicates are skipped.
-
-Press Ctrl+R and type part of a command to search history from newest to oldest.
-Press Ctrl+R again to find the next older match. Backspace edits the search text.
-Enter sends the selected command; Escape returns to the normal prompt so you can
-edit it first. Ctrl+G cancels the search and restores the line you were typing.
-Searching also works with in-memory history when persistence is disabled.
-
-Commands are appended immediately, one per line, so concurrent sessions can share
-the file. The file is not automatically truncated; delete or edit it between
-sessions to clear or trim saved history. New files are readable and writable only
-by their owner on systems that support Unix file permissions. History is stored
-in plain text, so use `--no-history` when sending sensitive data. This option
-disables reading and writing the file while retaining history within the current
-session. Piped input or output and `--execute` commands do not access the history
-file.
-
-Global installation detection supports npm's global launcher layout (including
-custom prefixes) and Bun's default global directory, `BUN_INSTALL`, or
-`BUN_INSTALL_GLOBAL_DIR`. For other installation layouts, use `--history` to
-enable persistence explicitly.
-
-If the global installation or home directory cannot be determined, or the history
-file cannot be read or written, wscat silently continues with history in memory.
+The file stores plain text. Use `--no-history` for sensitive data. Piped input or
+output and `--execute` do not use the file. If detection or file access fails,
+wscat continues silently with history in memory.
 
 ## License
 
