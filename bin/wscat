@@ -4,12 +4,17 @@
 
 const EventEmitter = require('events');
 const fs = require('fs');
-const readline = require('readline');
+const os = require('os');
+const path = require('path');
 const tty = require('tty');
 const WebSocket = require('ws');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { program } = require('commander');
 const { read } = require('read');
+
+const setupHistory = require('../lib/history');
+const isGlobalInstall = require('../lib/is-global-install');
+const createReadline = require('../lib/readline');
 
 /**
  * InputReader - processes console input.
@@ -24,7 +29,36 @@ class Console extends EventEmitter {
     this.stdout = process.stdout;
     this.stderr = process.stderr;
 
-    this.readlineInterface = readline.createInterface(this.stdin, this.stdout);
+    let historyFile;
+
+    try {
+      if (
+        this.stdin.isTTY &&
+        this.stdout.isTTY &&
+        !programOptions.execute.length &&
+        (programOptions.history === undefined
+          ? isGlobalInstall(process.argv[1])
+          : programOptions.history)
+      ) {
+        const home = os.homedir();
+
+        if (home && path.isAbsolute(home)) {
+          historyFile = path.join(home, '.wscat_history');
+        }
+      }
+    } catch (err) {
+      // Persistent history is optional; keep working without it.
+    }
+
+    this.readlineInterface = createReadline({
+      input: this.stdin,
+      output: this.stdout,
+      historySize: historyFile ? 1000 : undefined
+    });
+
+    if (historyFile) {
+      setupHistory(this.readlineInterface, historyFile);
+    }
 
     this.readlineInterface
       .on('line', (data) => {
@@ -112,6 +146,7 @@ program
   .option('--auth <username:password>', 'add basic HTTP authentication header')
   .option('--ca <ca>', 'specify a Certificate Authority (--connect only)')
   .option('--cert <cert>', 'specify a Client SSL Certificate (--connect only)')
+  .option('--history', 'enable persistent command history for local runs')
   .option('--host <host>', 'optional host')
   .option(
     '--key <key>',
@@ -124,6 +159,7 @@ program
     10
   )
   .option('--no-color', 'run without color')
+  .option('--no-history', 'disable persistent command history')
   .option(
     '--passphrase [passphrase]',
     "specify a Client SSL Certificate Key's passphrase (--connect only). " +
@@ -280,7 +316,8 @@ if (programOptions.listen) {
     options.headers = headers;
 
     let connectUrl = programOptions.connect;
-    if (!/^[a-z][a-z0-9.+-]*:/i.test(connectUrl)) {
+    // A hostname followed by a numeric port is not a URL scheme.
+    if (!/^[a-z][a-z0-9.+-]*:(?!\d+(?:[/?#]|$))/i.test(connectUrl)) {
       connectUrl = `ws://${connectUrl}`;
     }
 
