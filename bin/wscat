@@ -29,30 +29,35 @@ class Console extends EventEmitter {
     this.stdout = process.stdout;
     this.stderr = process.stderr;
 
-    const history =
-      this.stdin.isTTY &&
-      this.stdout.isTTY &&
-      !programOptions.execute.length &&
-      (programOptions.history === undefined
-        ? isGlobalInstall(process.argv[1])
-        : programOptions.history);
+    let historyFile;
+
+    try {
+      if (
+        this.stdin.isTTY &&
+        this.stdout.isTTY &&
+        !programOptions.execute.length &&
+        (programOptions.history === undefined
+          ? isGlobalInstall(process.argv[1])
+          : programOptions.history)
+      ) {
+        const home = os.homedir();
+
+        if (home && path.isAbsolute(home)) {
+          historyFile = path.join(home, '.wscat_history');
+        }
+      }
+    } catch (err) {
+      // Persistent history is optional; keep working without it.
+    }
 
     this.readlineInterface = readline.createInterface({
       input: this.stdin,
       output: this.stdout,
-      historySize: history ? 1000 : undefined
+      historySize: historyFile ? 1000 : undefined
     });
 
-    if (history) {
-      setupHistory(
-        this.readlineInterface,
-        path.join(os.homedir(), '.wscat_history'),
-        (err) => {
-          this.stderr.write(
-            `warning: Could not access history file: ${err.message}\n`
-          );
-        }
-      );
+    if (historyFile) {
+      setupHistory(this.readlineInterface, historyFile);
     }
 
     this.readlineInterface

@@ -90,8 +90,8 @@ custom prefixes) and Bun's default global directory, `BUN_INSTALL`, or
 `BUN_INSTALL_GLOBAL_DIR`. For other installation layouts, use `--history` to
 enable persistence explicitly.
 
-If the history file cannot be read or written, wscat prints a warning and continues
-with history in memory.
+If the global installation or home directory cannot be determined, or the history
+file cannot be read or written, wscat silently continues with history in memory.
 
 ## License
 

@@ -53,6 +53,7 @@ function start(t, fixture, args, options = {}) {
       ...args
     ],
     {
+      cwd: fixture.directory,
       env: {
         ...process.env,
         HOME: fixture.directory,
@@ -333,3 +334,101 @@ test('--listen restores and saves history', { timeout: 10000 }, async (t) => {
     'earlier command\nserver command\n'
   );
 });
+
+for (const operation of ['read', 'write']) {
+  test(
+    `history ${operation} failures are silent and do not interrupt the session`,
+    { timeout: 10000 },
+    async (t) => {
+      const fixture = createFixture(t);
+      const server = await createServer(t);
+
+      if (operation === 'read') fs.mkdirSync(fixture.history);
+
+      const session = start(t, fixture, [
+        '--history',
+        '--slash',
+        '-c',
+        `ws://127.0.0.1:${server.address().port}`
+      ]);
+
+      await waitForOutput(session, 'ready');
+      if (operation === 'write') fs.mkdirSync(fixture.history);
+
+      const socket = [...server.clients][0];
+
+      assert.strictEqual(await send(session, socket, 'first\n'), 'first');
+      fs.rmdirSync(fixture.history);
+      assert.strictEqual(await send(session, socket, 'second\n'), 'second');
+      assert.strictEqual(await send(session, socket, '\u001b[A\n'), 'second');
+      session.child.stdin.write('/close\n');
+
+      assert.strictEqual((await session.exited)[0], 0);
+      assert.strictEqual(session.errors, '');
+      assert.doesNotMatch(session.output, /warning:|error:/);
+      assert.strictEqual(fs.existsSync(fixture.history), false);
+    }
+  );
+}
+
+for (const failure of ['throw', 'empty', 'relative', 'missing', 'detection']) {
+  test(
+    `unavailable history location (${failure}) silently keeps in-memory history`,
+    { timeout: 10000 },
+    async (t) => {
+      const fixture = createFixture(t);
+      const server = await createServer(t);
+      let preload;
+
+      if (failure === 'detection') {
+        const filename = path.join(root, 'lib', 'is-global-install');
+
+        preload =
+          `const filename = require.resolve(${JSON.stringify(filename)});\n` +
+          'require(filename);\n' +
+          'require.cache[filename].exports = () => {\n' +
+          "  throw new Error('Installation lookup failed');\n" +
+          '};\n';
+      } else if (failure === 'throw') {
+        preload =
+          "require('os').homedir = () => {\n" +
+          "  throw new Error('Home lookup failed');\n" +
+          '};\n';
+      } else {
+        const home =
+          failure === 'empty'
+            ? ''
+            : failure === 'relative'
+              ? '.'
+              : path.join(fixture.directory, 'missing');
+
+        preload = `require('os').homedir = () => ${JSON.stringify(home)};\n`;
+      }
+
+      fs.appendFileSync(fixture.preload, preload);
+
+      const args = ['--slash', '-c', `ws://127.0.0.1:${server.address().port}`];
+
+      if (failure !== 'detection') args.push('--history');
+
+      const session = start(t, fixture, args);
+
+      await waitForOutput(session, 'ready');
+
+      const socket = [...server.clients][0];
+
+      assert.strictEqual(await send(session, socket, 'hello\n'), 'hello');
+      assert.strictEqual(await send(session, socket, '\u001b[A\n'), 'hello');
+      session.child.stdin.write('/close\n');
+
+      assert.strictEqual((await session.exited)[0], 0);
+      assert.strictEqual(session.errors, '');
+      assert.doesNotMatch(session.output, /warning:|error:/);
+      assert.strictEqual(fs.existsSync(fixture.history), false);
+      assert.strictEqual(
+        fs.existsSync(path.join(fixture.directory, 'missing')),
+        false
+      );
+    }
+  );
+}

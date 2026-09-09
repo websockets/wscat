@@ -20,7 +20,7 @@ function createHistoryFile(t, contents) {
   return filename;
 }
 
-function createSession(t, filename, onError = (err) => assert.ifError(err)) {
+function createSession(t, filename) {
   const input = new PassThrough();
   const output = new PassThrough();
   const rl = readline.createInterface({
@@ -36,7 +36,7 @@ function createSession(t, filename, onError = (err) => assert.ifError(err)) {
     input.destroy();
     output.destroy();
   });
-  setupHistory(rl, filename, onError);
+  setupHistory(rl, filename);
 
   return rl;
 }
@@ -148,32 +148,28 @@ test("interleaved sessions preserve each other's submitted lines", (t) => {
   ]);
 });
 
-test('keeps in-memory history after a read failure and reports it once', (t) => {
+test('keeps in-memory history after a read failure', (t) => {
   const filename = createHistoryFile(t);
-  const errors = [];
 
   fs.mkdirSync(filename);
 
-  const rl = createSession(t, filename, (err) => errors.push(err));
+  const rl = createSession(t, filename);
 
   rl.write('first\nsecond\n');
-  assert.strictEqual(errors.length, 1);
   assert.ok(fs.statSync(filename).isDirectory());
   rl.write(null, { name: 'up' });
   assert.strictEqual(rl.line, 'second');
 });
 
-test('keeps in-memory history after a write failure and reports it once', (t) => {
+test('keeps in-memory history without retrying after a write failure', (t) => {
   const filename = createHistoryFile(t);
-  const errors = [];
-  const rl = createSession(t, filename, (err) => errors.push(err));
+  const rl = createSession(t, filename);
 
   fs.mkdirSync(filename);
   rl.write('first\n');
   fs.rmdirSync(filename);
   rl.write('second\n');
 
-  assert.strictEqual(errors.length, 1);
   assert.strictEqual(fs.existsSync(filename), false);
   rl.write(null, { name: 'up' });
   assert.strictEqual(rl.line, 'second');
